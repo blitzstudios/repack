@@ -1,0 +1,13 @@
+import Fastify from 'fastify';
+import { type Server } from './types.js';
+/**
+ * Create instance of development server, powered by Fastify.
+ *
+ * @param config Server configuration.
+ * @returns `start` and `stop` functions as well as an underlying Fastify `instance`.
+ */
+export declare function createServer(config: Server.Config): Promise<{
+    start: () => Promise<void>;
+    stop: () => Promise<void>;
+    instance: Fastify.FastifyInstance<import("http").Server<typeof import("http").IncomingMessage, typeof import("http").ServerResponse>, import("http").IncomingMessage, import("http").ServerResponse<import("http").IncomingMessage>, Fastify.FastifyBaseLogger, Fastify.FastifyTypeProviderDefault> & PromiseLike<Fastify.FastifyInstance<import("http").Server<typeof import("http").IncomingMessage, typeof import("http").ServerResponse>, import("http").IncomingMessage, import("http").ServerResponse<import("http").IncomingMessage>, Fastify.FastifyBaseLogger, Fastify.FastifyTypeProviderDefault>>;
+}>;

@@ -1,0 +1,51 @@
+{
+  "name": "@callstack/repack-dev-server",
+  "description": "A bundler-agnostic development server for React Native applications as part of @callstack/repack.",
+  "license": "MIT",
+  "version": "5.1.1",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "static"],
+  "homepage": "https://github.com/callstack/repack",
+  "repository": "github:callstack/repack",
+  "keywords": ["react-native", "repack", "re.pack", "server", "dev-server"],
+  "author": "zamotany <zamotany.oss@gmail.com>",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc --noEmit",
+    "archive": "pnpm build && pnpm pack"
+  },
+  "dependencies": {
+    "@babel/code-frame": "^7.26.2",
+    "@fastify/middie": "^8.3.0",
+    "@fastify/sensible": "^5.5.0",
+    "@react-native/dev-middleware": "0.77.3",
+    "fastify": "^4.24.3",
+    "fastify-favicon": "^4.3.0",
+    "fastify-plugin": "^4.5.1",
+    "http-proxy-middleware": "^3.0.3",
+    "launch-editor": "^2.10.0",
+    "open": "^10.1.0",
+    "pretty-format": "^28.1.0",
+    "source-map": "^0.7.4",
+    "ws": "^8.18.1"
+  },
+  "devDependencies": {
+    "@types/babel__code-frame": "^7.0.6",
+    "@types/node": "catalog:",
+    "@types/ws": "^8.18.0",
+    "typescript": "catalog:"
+  }
+}
