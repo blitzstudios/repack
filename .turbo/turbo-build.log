@@ -1,0 +1,14 @@
+@callstack/repack:build: cache hit, replaying output [2m567a496b5e79c559[0m
+[34m@callstack/repack:build: [0m
+[34m@callstack/repack:build: [0m> @callstack/repack@0.4.4 build /Users/lherbold/projects/repack/packages/repack
+[34m@callstack/repack:build: [0m> pnpm build:js && pnpm build:ts
+[34m@callstack/repack:build: [0m
+[34m@callstack/repack:build: [0m
+[34m@callstack/repack:build: [0m> @callstack/repack@0.4.4 build:js /Users/lherbold/projects/repack/packages/repack
+[34m@callstack/repack:build: [0m> babel src --out-dir dist --extensions ".js,.ts" --source-maps --ignore "**/__tests__/**" --delete-dir-on-start
+[34m@callstack/repack:build: [0m
+[34m@callstack/repack:build: [0mSuccessfully compiled 73 files with Babel (1205ms).
+[34m@callstack/repack:build: [0m
+[34m@callstack/repack:build: [0m> @callstack/repack@0.4.4 build:ts /Users/lherbold/projects/repack/packages/repack
+[34m@callstack/repack:build: [0m> tsc --emitDeclarationOnly
+[34m@callstack/repack:build: [0m

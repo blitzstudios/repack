@@ -1,0 +1,23 @@
+@callstack/repack:lint: cache hit, replaying output [2m5a34a42ab838cce2[0m
+[34m@callstack/repack:lint: [0m
+[34m@callstack/repack:lint: [0m> @callstack/repack@0.4.1 lint /Users/lherbold/projects/repack/packages/repack
+[34m@callstack/repack:lint: [0m> eslint --ext ".js,.ts" commands.js client.js src
+[34m@callstack/repack:lint: [0m
+[34m@callstack/repack:lint: [0m
+[34m@callstack/repack:lint: [0mOops! Something went wrong! :(
+[34m@callstack/repack:lint: [0m
+[34m@callstack/repack:lint: [0mESLint: 8.57.0
+[34m@callstack/repack:lint: [0m
+[34m@callstack/repack:lint: [0mError [ERR_PACKAGE_PATH_NOT_EXPORTED]: Failed to load plugin 'flowtype' declared in '.eslintrc.js » @callstack/eslint-config/node#overrides[0]': Package subpath './lib/rules/no-unused-expressions' is not defined by "exports" in /Users/lherbold/projects/repack/packages/repack/node_modules/eslint/package.json
+[34m@callstack/repack:lint: [0mReferenced from: /Users/lherbold/projects/repack/packages/repack/node_modules/@callstack/eslint-config/node.js
+[34m@callstack/repack:lint: [0m    at exportsNotFound (node:internal/modules/esm/resolve:294:10)
+[34m@callstack/repack:lint: [0m    at packageExportsResolve (node:internal/modules/esm/resolve:641:9)
+[34m@callstack/repack:lint: [0m    at resolveExports (node:internal/modules/cjs/loader:591:36)
+[34m@callstack/repack:lint: [0m    at Module._findPath (node:internal/modules/cjs/loader:668:31)
+[34m@callstack/repack:lint: [0m    at Module._resolveFilename (node:internal/modules/cjs/loader:1130:27)
+[34m@callstack/repack:lint: [0m    at Module._load (node:internal/modules/cjs/loader:985:27)
+[34m@callstack/repack:lint: [0m    at Module.require (node:internal/modules/cjs/loader:1235:19)
+[34m@callstack/repack:lint: [0m    at require (node:internal/modules/helpers:176:18)
+[34m@callstack/repack:lint: [0m    at Object.<anonymous> (/Users/lherbold/projects/repack/packages/repack/node_modules/eslint-plugin-flowtype/dist/rules/noUnusedExpressions.js:7:28)
+[34m@callstack/repack:lint: [0m    at Module._compile (node:internal/modules/cjs/loader:1376:14)
+[34m@callstack/repack:lint: [0m ELIFECYCLE  Command failed with exit code 2.

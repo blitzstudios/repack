@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","names":["_CodeSigningPlugin","require"],"sources":["../../../../src/webpack/plugins/CodeSigningPlugin/index.ts"],"sourcesContent":["export { CodeSigningPlugin } from './CodeSigningPlugin';\nexport type { CodeSigningPluginConfig } from './config';\n"],"mappings":";;;;;;;;;;;AAAA,IAAAA,kBAAA,GAAAC,OAAA","ignoreList":[]}
