@@ -1,0 +1,30 @@
+import type { Server } from '@callstack/repack-dev-server';
+import type { MultiCompiler, StatsCompilation, WatchOptions } from '@rspack/core';
+import memfs from 'memfs';
+import type { Reporter } from '../../logging';
+import type { HMRMessageBody } from '../../types';
+import type { StartCliOptions } from '../types';
+import type { CompilerAsset, MultiWatching } from './types';
+export declare class Compiler {
+    private cliOptions;
+    private reporter;
+    platforms: string[];
+    assetsCache: Record<string, Record<string, CompilerAsset> | undefined>;
+    statsCache: Record<string, StatsCompilation | undefined>;
+    resolvers: Record<string, Array<(error?: Error) => void>>;
+    isCompilationInProgress: boolean;
+    watchOptions: WatchOptions;
+    watching: MultiWatching | null;
+    compiler: MultiCompiler;
+    filesystem: memfs.IFs;
+    devServerContext: Server.DelegateContext;
+    constructor(cliOptions: StartCliOptions, reporter: Reporter);
+    private callPendingResolvers;
+    setDevServerContext(ctx: Server.DelegateContext): void;
+    init(): Promise<void>;
+    start(): void;
+    getAsset(filename: string, platform: string): Promise<CompilerAsset>;
+    getSource(filename: string, platform: string | undefined): Promise<string | Buffer>;
+    getSourceMap(filename: string, platform: string | undefined): Promise<string | Buffer>;
+    getHmrBody(platform: string): HMRMessageBody | null;
+}
