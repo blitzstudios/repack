@@ -1,0 +1,111 @@
+import webpack from 'webpack';
+import type { DevServerOptions, WebpackPlugin } from '../../types';
+import { LoggerPluginConfig } from './LoggerPlugin';
+import { OutputPluginConfig } from './OutputPlugin';
+/**
+ * {@link RepackPlugin} configuration options.
+ */
+export interface RepackPluginConfig {
+    /** Context in which all resolution happens. Usually it's project root directory. */
+    context: string;
+    /** Compilation mode. */
+    mode: 'development' | 'production';
+    /** Target application platform. */
+    platform: string;
+    /**
+     * Development server configuration options.
+     * Used to configure `@callstack/repack-dev-server`.
+     *
+     * If `undefined`, then development server will not be used.
+     */
+    devServer?: DevServerOptions;
+    /**
+     * Whether source maps should be generated. Defaults to `true`.
+     *
+     * Setting this to `false`, disables any source map generation.
+     */
+    sourceMaps?: boolean;
+    /**
+     * Output options specifying where to save generated bundle, source map and assets.
+     *
+     * Refer to {@link OutputPluginConfig.output} for more details.
+     */
+    output: OutputPluginConfig['output'];
+    /** The entry chunk name, `main` by default. */
+    entryName?: string;
+    /**
+     * Options specifying how to deal with extra chunks generated in the compilation,
+     * usually by using dynamic `import(...)` function.
+     *
+     * Refer to {@link OutputPluginConfig.extraChunks} for more details.
+     */
+    extraChunks?: OutputPluginConfig['extraChunks'];
+    /**
+     * Options to configure {@link LoggerPlugin}'s `output`.
+     *
+     * Setting this to `false` disables {@link LoggerPlugin}.
+     */
+    logger?: LoggerPluginConfig['output'] | boolean;
+}
+/**
+ * Webpack plugin, which abstracts configuration of other Re.Pack's plugin
+ * to make Webpack config more readable.
+ *
+ * @example Usage in Webpack config (ESM):
+ * ```ts
+ * import * as Repack from '@callstack/repack';
+ *
+ * export default (env) => {
+ *   const {
+ *     mode = 'development',
+ *     platform,
+ *     devServer = undefined,
+ *   } = env;
+ *
+ *   return {
+ *     plugins: [
+ *       new Repack.RepackPlugin({
+ *         mode,
+ *         platform,
+ *         devServer,
+ *       }),
+ *     ],
+ *   };
+ * };
+ * ```
+ *
+ * Internally, `RepackPlugin` configures the following plugins:
+ * - `webpack.DefinePlugin` with `__DEV__` global
+ * - {@link AssetsResolverPlugin}
+ * - {@link OutputPlugin}
+ * - {@link DevelopmentPlugin}
+ * - {@link RepackTargetPlugin}
+ * - `webpack.SourceMapDevToolPlugin`
+ * - {@link LoggerPlugin}
+ *
+ * `RepackPlugin` provides a sensible defaults, but can be customized to some extent.
+ * If you need more control, it's recommended to remove `RepackPlugin` and use other plugins
+ * directly, eg:
+ * ```ts
+ * import React from '@callstack/repack';
+ *
+ * new Repact.plugins.AssetsResolverPlugin();
+ * ```
+ *
+ * @category Webpack Plugin
+ */
+export declare class RepackPlugin implements WebpackPlugin {
+    private config;
+    /**
+     * Constructs new `RepackPlugin`.
+     *
+     * @param config Plugin configuration options.
+     */
+    constructor(config: RepackPluginConfig);
+    /**
+     * Apply the plugin.
+     *
+     * @param compiler Webpack compiler instance.
+     */
+    apply(compiler: webpack.Compiler): void;
+}
