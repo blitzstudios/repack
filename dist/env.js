@@ -1,0 +1,12 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.WORKER_ENV_KEY = exports.VERBOSE_ENV_KEY = exports.SOURCEMAP_FILENAME_ENV_KEY = exports.BUNDLE_FILENAME_ENV_KEY = exports.ASSETS_DEST_ENV_KEY = void 0;
+const VERBOSE_ENV_KEY = exports.VERBOSE_ENV_KEY = 'REPACK_VERBOSE';
+const WORKER_ENV_KEY = exports.WORKER_ENV_KEY = 'REPACK_WORKER';
+const BUNDLE_FILENAME_ENV_KEY = exports.BUNDLE_FILENAME_ENV_KEY = 'REPACK_BUNDLE_FILENAME';
+const SOURCEMAP_FILENAME_ENV_KEY = exports.SOURCEMAP_FILENAME_ENV_KEY = 'REPACK_SOURCEMAP_FILENAME';
+const ASSETS_DEST_ENV_KEY = exports.ASSETS_DEST_ENV_KEY = 'REPACK_ASSETS_DEST';
+//# sourceMappingURL=env.js.map
