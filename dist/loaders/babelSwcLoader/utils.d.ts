@@ -1,0 +1,12 @@
+import type { LoaderContext, SwcLoaderParserConfig, experiments } from '@rspack/core';
+type Swc = (typeof experiments)['swc'];
+type Logger = ReturnType<LoaderContext['getLogger']>;
+export declare function isTypeScriptSource(fileName: string): boolean;
+export declare function isTSXSource(fileName: string): boolean;
+export declare function getProjectBabelConfig(filename: string, projectRoot?: string): import("@babel/core").BabelProjectConfig;
+export declare function getExtraBabelPlugins(filename: string): (string | [string, Record<string, any>])[];
+export declare function getSwcParserConfig(filename: string): SwcLoaderParserConfig;
+export declare function checkParallelModeAvailable(loaderContext: LoaderContext, logger: Logger): void;
+export declare function getProjectRootPath(loaderContext: LoaderContext): string | undefined;
+export declare const lazyGetSwc: (loaderContext: LoaderContext) => Promise<Swc | null>;
+export {};
