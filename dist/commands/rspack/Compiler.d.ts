@@ -1,0 +1,27 @@
+import type { Server } from '@callstack/repack-dev-server';
+import type { MultiCompiler, MultiRspackOptions, StatsCompilation } from '@rspack/core';
+import memfs from 'memfs';
+import type { Reporter } from '../../logging/types.js';
+import type { CompilerAsset } from './types.js';
+export declare class Compiler {
+    private reporter;
+    private rootDir;
+    compiler: MultiCompiler;
+    filesystem: memfs.IFs;
+    platforms: string[];
+    assetsCache: Record<string, Record<string, CompilerAsset> | undefined>;
+    statsCache: Record<string, StatsCompilation | undefined>;
+    resolvers: Record<string, Array<(error?: Error) => void>>;
+    isCompilationInProgress: boolean;
+    devServerContext: Server.DelegateContext;
+    constructor(configs: MultiRspackOptions, reporter: Reporter, rootDir: string);
+    get devServerOptions(): import("@rspack/core").DevServer;
+    get watchOptions(): import("@rspack/core").WatchOptions;
+    private callPendingResolvers;
+    setDevServerContext(ctx: Server.DelegateContext): void;
+    private setupCompiler;
+    start(): void;
+    getAsset(filename: string, platform: string): Promise<CompilerAsset>;
+    getSource(filename: string, platform: string | undefined): Promise<string | Buffer>;
+    getSourceMap(filename: string, platform: string | undefined): Promise<string | Buffer>;
+}

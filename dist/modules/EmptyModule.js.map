@@ -1,0 +1,1 @@
+{"version":3,"file":"EmptyModule.js","names":[],"sources":["../../src/modules/EmptyModule.ts"],"sourcesContent":["// Empty module as a target for NormalModuleReplacementPlugin.\n"],"mappings":"AAAA","ignoreList":[]}
