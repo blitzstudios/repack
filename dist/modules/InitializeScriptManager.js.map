@@ -1,0 +1,1 @@
+{"version":3,"file":"InitializeScriptManager.js","names":["ScriptManager","init"],"sources":["../../src/modules/InitializeScriptManager.ts"],"sourcesContent":["import { ScriptManager } from './ScriptManager/ScriptManager.js';\n\nScriptManager.init();\n"],"mappings":"AAAA,SAASA,aAAa,QAAQ,kCAAkC;AAEhEA,aAAa,CAACC,IAAI,CAAC,CAAC","ignoreList":[]}
