@@ -1,0 +1,1 @@
+{"version":3,"file":"shims.js","names":["replaceAll","shim"],"sources":["../src/shims.ts"],"sourcesContent":["// @ts-ignore\nimport replaceAll from 'string.prototype.replaceall';\n\n// `.replaceAll` has to be shimmed in Node 14\nreplaceAll.shim();\n"],"mappings":";;AACA;;;;AADA;AAGA;AACAA,wBAAA,CAAWC,IAAX"}
