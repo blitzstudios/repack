@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","names":["default"],"sources":["../../../src/plugins/symbolicate/index.ts"],"sourcesContent":["export { default } from './sybmolicatePlugin';\nexport * from './Symbolicator';\nexport * from './types';\n"],"mappings":"SAASA,O"}
