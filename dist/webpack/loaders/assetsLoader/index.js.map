@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","names":[],"sources":["../../../../src/webpack/loaders/assetsLoader/index.ts"],"sourcesContent":["export { default } from './assetsLoader';\n"],"mappings":";;;;;;;;;;;;AAAA"}
