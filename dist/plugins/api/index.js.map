@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","names":["default"],"sources":["../../../src/plugins/api/index.ts"],"sourcesContent":["export { default } from './apiPlugin';\n"],"mappings":"SAASA,O"}
