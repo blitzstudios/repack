@@ -1,7 +1,6 @@
 import readline from 'readline';
 import { Config } from '@react-native-community/cli-types';
 import { CliOptions, StartArguments } from '../types';
-import { DEFAULT_PORT } from '../webpack/utils';
 import { DevServerProxy } from '../server';
 import { VERBOSE_ENV_KEY } from '../env';
 import { getWebpackConfigPath } from './utils/getWebpackConfigPath';
@@ -40,6 +39,8 @@ export function start(_: string[], config: Config, args: StartArguments) {
     process.env[VERBOSE_ENV_KEY] = '1';
   }
 
+  const DEFAULT_PORT = +(process.env.RCT_METRO_PORT as string) || 8081;
+
   const devServerProxy = new DevServerProxy(
     {
       host: args.host,
@@ -59,6 +60,7 @@ export function start(_: string[], config: Config, args: StartArguments) {
       devServerProxy.fastify.log.warn({
         msg: 'Interactive mode is not supported in this environment',
       });
+      return;
     }
 
     readline.emitKeypressEvents(process.stdin);

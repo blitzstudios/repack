@@ -149,10 +149,18 @@ export class DevServer extends BaseDevServer {
 
     this.fastify.post('/symbolicate', async (request, reply) => {
       try {
-        const { stack } = JSON.parse(request.body as string) as {
+        let { stack } = JSON.parse(request.body as string) as {
           stack: ReactNativeStackFrame[];
         };
-        const platform = Symbolicator.inferPlatformFromStack(stack);
+
+        const platform = (request.query as { platform?: string } | undefined)
+          ?.platform;
+
+        for (let i = 0; i < stack.length; i++) {
+          let bundle = path.parse(stack[i].file as string).base;
+          stack[i].file = `http://localhost:8081/${bundle}?platform=${platform}`;
+        }
+
         if (!platform) {
           reply.code(400).send();
         } else {

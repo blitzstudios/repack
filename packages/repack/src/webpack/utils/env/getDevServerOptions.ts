@@ -3,7 +3,7 @@ import { getFallbackFromOptions } from './internal/getFallbackFromOptions';
 import { parseCliOptions } from './internal/parseCliOptions';
 
 /** Default development server (proxy) port. */
-export const DEFAULT_PORT = 8081;
+const DEFAULT_PORT = +(process.env.RCT_METRO_PORT as string) || 8081;
 
 type DeepOptional<T> = T extends { [key: string]: any }
   ? {

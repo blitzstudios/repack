@@ -303,16 +303,9 @@ export class DevServerProxy extends BaseDevServer {
     });
 
     this.fastify.post('/symbolicate', async (request, reply) => {
-      const { stack } = JSON.parse(request.body as string) as {
-        stack: ReactNativeStackFrame[];
-      };
-      const platform = Symbolicator.inferPlatformFromStack(stack);
-      if (!platform) {
-        reply.code(400).send();
-      } else {
-        await this.forwardRequest(platform, request, reply);
-      }
-
+      const platform = (request.query as { platform?: string } | undefined)
+        ?.platform;
+      await this.forwardRequest(platform as string, request, reply);
       return reply;
     });
 
