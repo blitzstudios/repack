@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../../../src/webpack/plugins/AssetsResolverPlugin/index.ts"],"names":[],"mappings":";;;;;;AAAA;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA","sourcesContent":["export * from './AssetsResolverPlugin';\n"],"file":"index.js"}
