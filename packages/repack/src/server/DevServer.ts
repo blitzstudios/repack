@@ -157,7 +157,16 @@ export class DevServer extends BaseDevServer {
           ?.platform;
 
         for (let i = 0; i < stack.length; i++) {
-          let bundle = path.parse(stack[i].file as string).base;
+          let file = stack[i].file as string;
+          let bundle = path.parse(file).base;
+
+          // When running in visual studio code, our bundle is copied to a local location:
+          // clients/app-mobile/.vscode/.react/index.bundle.
+          // In order to parse source maps we need to point to localhost instead.
+          if (file.startsWith('http://')) {
+            break;
+          }
+
           stack[i].file = `http://localhost:8081/${bundle}?platform=${platform}`;
         }
 
