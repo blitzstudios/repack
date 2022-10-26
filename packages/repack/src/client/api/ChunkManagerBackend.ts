@@ -204,7 +204,6 @@ export class ChunkManagerBackend {
         code ? `[${code}]` : '',
         config
       );
-      throw new LoadEvent('load', config.url, error);
     }
   }
 
@@ -230,7 +229,6 @@ export class ChunkManagerBackend {
         code ? `[${code}]` : '',
         config
       );
-      throw new LoadEvent('load', config.url, error);
     }
   }
 
