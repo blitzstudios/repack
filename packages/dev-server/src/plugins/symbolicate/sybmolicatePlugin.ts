@@ -1,3 +1,4 @@
+import path from 'path';
 import type { FastifyInstance } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
 import type { Server } from '../../types';
@@ -19,10 +20,27 @@ async function symbolicatePlugin(
     // we cannot use JSON schema to validate the body.
 
     try {
-      const { stack } = JSON.parse(request.body as string) as {
+      let { stack } = JSON.parse(request.body as string) as {
         stack: ReactNativeStackFrame[];
       };
-      const platform = Symbolicator.inferPlatformFromStack(stack);
+
+      const platform = (request.query as { platform?: string } | undefined)
+        ?.platform;
+
+      for (let i = 0; i < stack.length; i++) {
+        let file = stack[i].file as string;
+        let bundle = path.parse(file).base;
+
+        // When running in visual studio code, our bundle is copied to a local location:
+        // clients/app-mobile/.vscode/.react/index.bundle.
+        // In order to parse source maps we need to point to localhost instead.
+        if (file.startsWith('http://')) {
+          break;
+        }
+
+        stack[i].file = `http://localhost:8081/${bundle}?platform=${platform}`;
+      }
+
       if (!platform) {
         request.log.debug({ msg: 'Received stack', stack });
         reply.badRequest('Cannot infer platform from stack trace');
@@ -36,7 +54,7 @@ async function symbolicatePlugin(
         msg: 'Failed to symbolicate',
         error: (error as Error).message,
       });
-      reply.internalServerError();
+      reply.badRequest('Failed to symbolicate');
     }
   });
 }

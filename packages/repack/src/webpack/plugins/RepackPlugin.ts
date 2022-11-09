@@ -126,6 +126,7 @@ export class RepackPlugin implements WebpackPlugin {
   apply(compiler: webpack.Compiler) {
     new webpack.DefinePlugin({
       __DEV__: JSON.stringify(this.config.mode === 'development'),
+      __E2E__: JSON.stringify(process.env.E2E),
     }).apply(compiler);
 
     new AssetsResolverPlugin({

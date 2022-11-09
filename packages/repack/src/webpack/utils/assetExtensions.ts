@@ -13,8 +13,7 @@ export const SCALABLE_ASSETS = [
 ];
 
 /** Extensions array of all supported assets by Re.Pack's Assets loader. */
-export const ASSET_EXTENSIONS = [
-  ...SCALABLE_ASSETS,
+export const NON_SCALABLE_ASSETS = [
   // Video formats
   'm4v',
   'mov',
@@ -41,6 +40,9 @@ export const ASSET_EXTENSIONS = [
   'zip',
   'obj',
 ];
+
+/** Extensions array of all supported assets by Re.Pack's Assets loader. */
+export const ASSET_EXTENSIONS = [...SCALABLE_ASSETS, ...NON_SCALABLE_ASSETS];
 
 /**
  * Creates RegExp from array of asset extensions.

@@ -3685,7 +3685,41 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@callstack/repack@3.0.0, @callstack/repack@workspace:packages/repack":
+"@callstack/repack@npm:3.0.0":
+  version: 3.0.0
+  resolution: "@callstack/repack@npm:3.0.0"
+  dependencies:
+    "@callstack/repack-dev-server": ^1.0.0
+    "@pmmmwh/react-refresh-webpack-plugin": ^0.5.7
+    colorette: ^1.2.2
+    dedent: ^0.7.0
+    escape-string-regexp: ^4.0.0
+    events: ^3.3.0
+    execa: ^5.0.0
+    fs-extra: ^10.0.0
+    hash.js: ^1.1.7
+    hasha: ^5.2.2
+    image-size: ^0.9.3
+    loader-utils: ^2.0.0
+    lodash.throttle: ^4.1.1
+    memfs: ^3.4.4
+    mime-types: ^2.1.35
+    pretty-format: ^26.6.2
+    react-refresh: ^0.14.0
+    schema-utils: ^3.0.0
+    shallowequal: ^1.1.0
+    string.prototype.replaceall: ^1.0.6
+    tapable: ^2.1.1
+  peerDependencies:
+    "@react-native-community/cli": "*"
+    "@react-native-community/cli-types": "*"
+    react-native: ">=0.63"
+    webpack: 5.x
+  checksum: 091eddb87b1d037e48796419985f4ce8ddb80c3def492e3729f31f5544f8d1362d79d9f930af31e33bf0009a7cae4522a58a37db98bd8b37b7ec73a558c371f1
+  languageName: node
+  linkType: hard
+
+"@callstack/repack@workspace:packages/repack":
   version: 0.0.0-use.local
   resolution: "@callstack/repack@workspace:packages/repack"
   dependencies:
