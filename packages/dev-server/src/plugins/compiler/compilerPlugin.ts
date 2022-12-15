@@ -21,6 +21,7 @@ async function compilerPlugin(
       },
     },
     handler: async (request, reply) => {
+      console.log('[CompilerPlugin] compile requested:', request?.url);
       let file = (request.params as { '*'?: string })['*'];
       let { platform } = request.query as { platform?: string };
 
@@ -34,7 +35,7 @@ async function compilerPlugin(
       // to platform query param.
       platform = delegate.compiler.inferPlatform?.(request.url) ?? platform;
 
-      if (!platform) {
+      if (!platform || (platform !== 'ios' && platform !== 'android')) {
         request.log.error('Cannot detect platform');
         return reply.badRequest('Cannot detect platform');
       }
