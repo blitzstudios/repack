@@ -38,6 +38,10 @@ async function symbolicatePlugin(
           break;
         }
 
+        if (bundle === '<anonymous>') {
+          break;
+        }
+
         stack[i].file = `http://localhost:8081/${bundle}?platform=${platform}`;
       }
 

@@ -77,10 +77,14 @@ class HMRClient {
         }
 
         if (message.body.errors?.length) {
+          let fileUrl = '';
           message.body.errors.forEach((error) => {
             console.error('Cannot apply update due to error:', error);
+            fileUrl = error?.moduleName || '';
           });
-          this.app.LoadingView.hide();
+          let n = fileUrl.lastIndexOf('/');
+          let moduleName = fileUrl.substring(n + 1);
+          this.app.LoadingView.showMessage(`Failed (${moduleName})`, 'refresh');
           return;
         }
 
@@ -99,7 +103,11 @@ class HMRClient {
       throw new Error('[HMRClient] Hot Module Replacement is disabled.');
     }
 
-    if (!this.upToDate(update.hash) && module.hot.status() === 'idle') {
+    const upToDate = this.upToDate(update.hash);
+
+    if (upToDate) {
+      this.app.LoadingView.hide();
+    } else if (module.hot.status() === 'idle') {
       console.log('[HMRClient] Checking for updates on the server...');
       this.checkUpdates(update);
     }

@@ -21,7 +21,7 @@ async function compilerPlugin(
       },
     },
     handler: async (request, reply) => {
-      console.log('[CompilerPlugin] compile requested:', request?.url);
+      console.log('[CompilerPlugin] compile:', request?.url);
       let file = (request.params as { '*'?: string })['*'];
       let { platform } = request.query as { platform?: string };
 

@@ -88,6 +88,7 @@ export async function start(_: string[], config: Config, args: StartArguments) {
       let lastStats: webpack.StatsCompilation | undefined;
 
       compiler.on('watchRun', ({ platform }) => {
+        console.log('[CompilerPlugin] hook: watchRun');
         ctx.notifyBuildStart(platform);
         if (platform === 'android') {
           runAdbReverse(ctx, args.port ?? DEFAULT_PORT);
@@ -95,6 +96,7 @@ export async function start(_: string[], config: Config, args: StartArguments) {
       });
 
       compiler.on('invalid', ({ platform }) => {
+        console.log('[CompilerPlugin] hook: invalid');
         ctx.notifyBuildStart(platform);
         ctx.broadcastToHmrClients({ action: 'building' }, platform);
       });
@@ -108,6 +110,7 @@ export async function start(_: string[], config: Config, args: StartArguments) {
           platform: string;
           stats: webpack.StatsCompilation;
         }) => {
+          console.log('[CompilerPlugin] hook: done');
           ctx.notifyBuildEnd(platform);
           lastStats = stats;
           ctx.broadcastToHmrClients(
