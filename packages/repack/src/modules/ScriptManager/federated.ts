@@ -271,6 +271,7 @@ export namespace Federated {
     if (force) {
       delete self[containerName];
       delete self[`webpackChunk${containerName}`];
+      delete self[`webpackHotUpdate${containerName}`];
     }
 
     // Do not use `const container = self[containerName];` here. Once container is loaded

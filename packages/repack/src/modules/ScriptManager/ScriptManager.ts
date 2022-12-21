@@ -385,16 +385,20 @@ export class ScriptManager extends EventEmitter {
    *
    * @param scriptIds Array of script ids to clear from cache and remove from filesystem.
    */
-  async invalidateScripts(scriptIds: string[] = []) {
+  async invalidateScripts(scriptIds: string[]) {
     try {
       await this.initCache();
       const ids = scriptIds ?? Object.keys(this.cache);
 
-      for (const scriptId of ids) {
-        delete this.cache[scriptId];
+      if (scriptIds) {
+        for (const scriptId of ids) {
+          delete this.cache[scriptId];
+        }
+      } else {
+        this.cache = {};
       }
-      await this.saveCache();
 
+      await this.saveCache();
       await this.nativeScriptManager.invalidateScripts(ids);
       this.emit('invalidated', ids);
     } catch (error) {
