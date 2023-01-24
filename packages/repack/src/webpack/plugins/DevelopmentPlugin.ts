@@ -17,6 +17,7 @@ type EntryStaticNormalized =
 export interface DevelopmentPluginConfig {
   platform: string;
   devServer?: DevServerOptions;
+  listenerIP?: string;
 }
 
 /**
@@ -46,6 +47,7 @@ export class DevelopmentPlugin implements WebpackPlugin {
     new webpack.DefinePlugin({
       __PUBLIC_PORT__: JSON.stringify(this.config.devServer.port),
       __PLATFORM__: JSON.stringify(this.config.platform),
+      __LISTENER_IP__: JSON.stringify(this.config.listenerIP),
     }).apply(compiler);
 
     if (this.config?.devServer.hmr) {

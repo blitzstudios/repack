@@ -1,6 +1,6 @@
 {
   "name": "@callstack/repack",
-  "version": "2.4.0",
+  "version": "2.5.3",
   "description": "A Webpack-based toolkit to build your React Native application with full support of Webpack ecosystem.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -73,6 +73,7 @@
     "memfs": "^3.4.4",
     "mime-types": "^2.1.35",
     "pretty-format": "^26.6.2",
+    "react-native-udp": "^4.1.6",
     "react-refresh": "^0.14.0",
     "schema-utils": "^3.0.0",
     "shallowequal": "^1.1.0",

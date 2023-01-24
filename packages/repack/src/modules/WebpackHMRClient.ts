@@ -1,12 +1,15 @@
 /* eslint-env browser */
-/* globals __webpack_hash__, __DEV__, __PLATFORM__, __PUBLIC_PORT__ */
+/* globals __webpack_hash__, __DEV__, __PLATFORM__, __PUBLIC_PORT__, __LISTENER_IP__ */
 
+import dgram from 'react-native-udp';
+import UdpSocket from 'react-native-udp/lib/types/UdpSocket';
 import type { HMRMessage, HMRMessageBody } from '../types';
 import { getDevServerLocation } from './getDevServerLocation';
 
 class HMRClient {
   url: string;
   socket: WebSocket;
+  listener: UdpSocket | undefined;
   lastHash = '';
 
   constructor(
@@ -23,6 +26,10 @@ class HMRClient {
       getDevServerLocation().hostname
     }:${__PUBLIC_PORT__}/__hmr?platform=${__PLATFORM__}`;
     this.socket = new WebSocket(this.url);
+    if (__LISTENER_IP__) {
+      this.listener = dgram.createSocket({ type: 'udp4', debug: false });
+      this.listener.bind();
+    }
 
     console.log('[HMRClient] Connecting...', {
       url: this.url,
@@ -59,12 +66,26 @@ class HMRClient {
   processMessage(message: HMRMessage) {
     switch (message.action) {
       case 'building':
+        this.listener?.send(
+          JSON.stringify({ _webpack: 'building' }),
+          undefined,
+          undefined,
+          9092,
+          __LISTENER_IP__
+        );
         this.app.LoadingView.showMessage('Rebuilding...', 'refresh');
         console.log('[HMRClient] Bundle rebuilding', {
           name: message.body?.name,
         });
         break;
       case 'built':
+        this.listener?.send(
+          JSON.stringify({ _webpack: 'built' }),
+          undefined,
+          undefined,
+          9092,
+          __LISTENER_IP__
+        );
         console.log('[HMRClient] Bundle rebuilt', {
           name: message.body?.name,
           time: message.body?.time,

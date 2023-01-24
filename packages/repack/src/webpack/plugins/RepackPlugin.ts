@@ -58,6 +58,8 @@ export interface RepackPluginConfig {
    * Setting this to `false` disables {@link LoggerPlugin}.
    */
   logger?: LoggerPluginConfig['output'] | boolean;
+
+  listenerIP?: string;
 }
 
 /**
@@ -144,6 +146,7 @@ export class RepackPlugin implements WebpackPlugin {
     new DevelopmentPlugin({
       platform: this.config.platform,
       devServer: this.config.devServer,
+      listenerIP: this.config?.listenerIP,
     }).apply(compiler);
 
     new RepackTargetPlugin({
