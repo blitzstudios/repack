@@ -64,7 +64,7 @@ class HMRClient {
     try {
       tempConnection = TcpSocket.createConnection(
         {
-          port: 9092,
+          port: 9093,
           host: __LISTENER_IP__,
           reuseAddress: true,
         },
