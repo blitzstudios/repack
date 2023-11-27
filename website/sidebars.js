@@ -67,8 +67,18 @@ module.exports = {
     },
     {
       type: 'category',
+      label: 'Plugins',
+      items: ['configuration/plugins/chunks-to-hermes'],
+    },
+    {
+      type: 'category',
       label: 'Guides',
-      items: ['configuration/guides/svg', 'configuration/guides/inline-assets'],
+      items: [
+        'configuration/guides/svg',
+        'configuration/guides/inline-assets',
+        'configuration/guides/remote-assets',
+        'configuration/guides/lazy-compilation',
+      ],
     },
   ],
   packagesSidebar: [

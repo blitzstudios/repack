@@ -1,5 +1,22 @@
 # @callstack/repack-dev-server
 
+## 1.0.2
+
+### Patch Changes
+
+- [#441](https://github.com/callstack/repack/pull/441) [`a66785d`](https://github.com/callstack/repack/commit/a66785d4bdb629ab9abce2bf5fc0dc4b632072ef) Thanks [@hexboy](https://github.com/hexboy)! - fix(dev-server): fix Failed to open stack frame in editor error
+
+* [#426](https://github.com/callstack/repack/pull/426) [`719c2ef`](https://github.com/callstack/repack/commit/719c2ef3e1af0c82de8042de2c5c21ab88a287ea) Thanks [@jbroma](https://github.com/jbroma)! - Upgraded source-map to 0.7.4
+
+## 1.0.1
+
+### Patch Changes
+
+- [#308](https://github.com/callstack/repack/pull/308) [`ad9581a`](https://github.com/callstack/repack/commit/ad9581a6d690b128991a9d64374ecb4b8d49c413) Thanks [@jbroma](https://github.com/jbroma)! - Make all packages compatible with Node v18
+
+- Updated dependencies [[`ad9581a`](https://github.com/callstack/repack/commit/ad9581a6d690b128991a9d64374ecb4b8d49c413)]:
+  - @callstack/repack-debugger-app@1.0.2
+
 ## 1.0.0
 
 ### Major Changes

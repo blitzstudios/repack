@@ -29,6 +29,7 @@ beforeAll(async () => {
     port,
     silent: true,
     logFile: path.join(TMP_DIR, 'server.log'),
+    webpackConfig: path.join(__dirname, './webpack.config.mjs'),
   };
 
   const { stop } = await start.func([], config as Config, args as Args);
@@ -49,8 +50,8 @@ describe.each([
       'ios/miniapp.chunk.bundle.map',
       'ios/remote.chunk.bundle',
       'ios/remote.chunk.bundle.map',
-      'ios/src_asyncChunks_Async_tsx.chunk.bundle',
-      'ios/src_asyncChunks_Async_tsx.chunk.bundle.map',
+      'ios/src_asyncChunks_Async_local_tsx.chunk.bundle',
+      'ios/src_asyncChunks_Async_local_tsx.chunk.bundle.map',
       'assets/src/miniapp/callstack-dark.png?platform=ios',
       'assets/node_modules/react-native/Libraries/NewAppScreen/components/logo.png?platform=ios',
     ],
@@ -64,8 +65,8 @@ describe.each([
       'android/miniapp.chunk.bundle.map',
       'android/remote.chunk.bundle',
       'android/remote.chunk.bundle.map',
-      'android/src_asyncChunks_Async_tsx.chunk.bundle',
-      'android/src_asyncChunks_Async_tsx.chunk.bundle.map',
+      'android/src_asyncChunks_Async_local_tsx.chunk.bundle',
+      'android/src_asyncChunks_Async_local_tsx.chunk.bundle.map',
       'assets/src/miniapp/callstack-dark.png?platform=android',
       'assets/node_modules/react-native/Libraries/NewAppScreen/components/logo.png?platform=android',
     ],
