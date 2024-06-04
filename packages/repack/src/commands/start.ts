@@ -1,5 +1,6 @@
 import readline from 'readline';
 import { URL } from 'url';
+import path from 'path';
 import webpack from 'webpack';
 import execa from 'execa';
 import { Config } from '@react-native-community/cli-types';
@@ -33,7 +34,7 @@ export async function start(_: string[], config: Config, args: StartArguments) {
     config.root,
     args.webpackConfig
   );
-  const { reversePort: reversePortArg, ...restArgs } = args;
+  const { reversePort: reversePortArg, sendEvents: sendEventsArg, ...restArgs } = args;
   const cliOptions: CliOptions = {
     config: {
       root: config.root,
@@ -192,9 +193,17 @@ export async function start(_: string[], config: Config, args: StartArguments) {
 
   await start();
 
+  let sendEventsStop = () => {};
+  if (sendEventsArg) {
+    const sendEventsPath = path.join(config.root, sendEventsArg);
+    const { default: sendEvents } = await import(sendEventsPath);
+    sendEventsStop = await sendEvents(config.root);
+  }
+
   return {
     stop: async () => {
       reporter.stop();
+      sendEventsStop();
       await stop();
     },
   };
