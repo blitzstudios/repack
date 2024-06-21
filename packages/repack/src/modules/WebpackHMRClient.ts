@@ -1,12 +1,14 @@
 /* eslint-env browser */
-/* globals __webpack_hash__, __DEV__, __PLATFORM__, __PUBLIC_PORT__ */
+/* globals __webpack_hash__, __DEV__, __PLATFORM__, __PUBLIC_PORT__, __LISTENER_IP__ */
 
+import TcpSocket from 'react-native-tcp-socket';
 import type { HMRMessage, HMRMessageBody } from '../types';
 import { getDevServerLocation } from './getDevServerLocation';
 
 class HMRClient {
   url: string;
   socket: WebSocket;
+  listener: TcpSocket.Socket | undefined;
   lastHash = '';
 
   constructor(
@@ -56,15 +58,44 @@ class HMRClient {
     return this.lastHash === __webpack_hash__;
   }
 
+  sendTcpSocket(message: string) {
+    let tempConnection: TcpSocket.Socket | null = null;
+
+    try {
+      tempConnection = TcpSocket.createConnection(
+        {
+          port: 9093,
+          host: __LISTENER_IP__,
+          reuseAddress: true,
+        },
+        () => {
+          const json = JSON.stringify({ _webpack: message });
+          tempConnection?.write(json);
+          tempConnection?.destroy();
+        }
+      );
+      tempConnection.on('error', () => {
+        tempConnection?.destroy();
+      });
+    } catch (e) {
+      console.log('[HMRClient] Send TCPSocket failed: ', e);
+      tempConnection?.destroy();
+    }
+  }
+
   processMessage(message: HMRMessage) {
     switch (message.action) {
       case 'building':
+        this.sendTcpSocket('building');
+
         this.app.LoadingView.showMessage('Rebuilding...', 'refresh');
         console.log('[HMRClient] Bundle rebuilding', {
           name: message.body?.name,
         });
         break;
       case 'built':
+        this.sendTcpSocket('built');
+
         console.log('[HMRClient] Bundle rebuilt', {
           name: message.body?.name,
           time: message.body?.time,
@@ -77,10 +108,14 @@ class HMRClient {
         }
 
         if (message.body.errors?.length) {
+          let fileUrl = '';
           message.body.errors.forEach((error) => {
             console.error('Cannot apply update due to error:', error);
+            fileUrl = error?.moduleName || '';
           });
-          this.app.LoadingView.hide();
+          let n = fileUrl.lastIndexOf('/');
+          let moduleName = fileUrl.substring(n + 1);
+          this.app.LoadingView.showMessage(`Failed (${moduleName})`, 'refresh');
           return;
         }
 
@@ -99,7 +134,11 @@ class HMRClient {
       throw new Error('[HMRClient] Hot Module Replacement is disabled.');
     }
 
-    if (!this.upToDate(update.hash) && module.hot.status() === 'idle') {
+    const upToDate = this.upToDate(update.hash);
+
+    if (upToDate) {
+      this.app.LoadingView.hide();
+    } else if (module.hot.status() === 'idle') {
       console.log('[HMRClient] Checking for updates on the server...');
       void this.checkUpdates(update);
     }

@@ -201,7 +201,7 @@ export class OutputPlugin implements WebpackPlugin {
         : spec
     );
 
-    const isLocalChunk = (chunkId: string): boolean => {
+    const isLocalChunk = (chunkId: string | undefined): boolean => {
       for (const spec of extraAssets) {
         if (spec.type === 'local') {
           if (
@@ -211,7 +211,7 @@ export class OutputPlugin implements WebpackPlugin {
                 include: spec.include,
                 exclude: spec.exclude,
               },
-              chunkId
+              chunkId || ''
             )
           ) {
             return true;

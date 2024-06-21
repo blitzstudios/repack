@@ -118,6 +118,10 @@ const commands = [
         name: '--log-file <string>',
         description: 'Enables file logging to specified file',
       },
+      {
+        name: '--send-events <string>',
+        description: 'Send packager events to a listener',
+      },
       webpackConfigOption
     ),
     description: startCommand.description,

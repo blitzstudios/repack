@@ -9,7 +9,7 @@ export const VERBOSE_ENV_KEY = 'REPACK_VERBOSE';
 export const DEFAULT_HOSTNAME = 'localhost';
 
 /** Default development server port. */
-export const DEFAULT_PORT = 8081;
+export const DEFAULT_PORT = +(process.env.RCT_METRO_PORT as string) || 8081;
 
 /**
  * Checks if code is running as a worker.
