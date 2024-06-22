@@ -1,0 +1,83 @@
+{
+  "name": "@callstack/repack-dev-server",
+  "description": "A bundler-agnostic development server for React Native applications as part of @callstack/repack.",
+  "license": "MIT",
+  "version": "0.4.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "docs",
+    "vendor",
+    "CHANGELOG.md"
+  ],
+  "homepage": "https://github.com/callstack/repack",
+  "repository": "github:callstack/repack",
+  "keywords": [
+    "react-native",
+    "repack",
+    "re.pack",
+    "server",
+    "dev-server"
+  ],
+  "author": "zamotany <zamotany.oss@gmail.com>",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "scripts": {
+    "build:js": "babel src --out-dir dist --extensions \".js,.cjs,.ts\" --source-maps --ignore \"**/__tests__/**\" --delete-dir-on-start --copy-files",
+    "build:js:watch": "pnpm build:js --watch",
+    "build:ts": "tsc --emitDeclarationOnly",
+    "build:ts:watch": "pnpm build:ts --watch --preserveWatchOutput",
+    "build": "pnpm build:js && pnpm build:ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint --ext \".js,.ts\" src",
+    "archive": "pnpm build && pnpm pack"
+  },
+  "dependencies": {
+    "@babel/code-frame": "^7.16.7",
+    "@fastify/middie": "^8.3.0",
+    "@fastify/sensible": "^5.5.0",
+    "@react-native/dev-middleware": "^0.73.8",
+    "fastify": "^4.24.3",
+    "fastify-favicon": "^4.3.0",
+    "fastify-plugin": "^4.5.1",
+    "open": "^8.4.0",
+    "pretty-format": "^28.1.0",
+    "source-map": "^0.7.4",
+    "ws": "^8.7.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.23.9",
+    "@babel/core": "^7.23.9",
+    "@react-native-community/cli-debugger-ui": ">=11.3.1",
+    "@react-native-community/cli-server-api": ">=11.3.1",
+    "@types/babel__code-frame": "^7.0.3",
+    "@types/node": "18",
+    "@types/ws": "^8.5.3",
+    "babel-plugin-add-import-extension": "^1.6.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5"
+  },
+  "peerDependencies": {
+    "@react-native-community/cli-debugger-ui": ">=11.3.1",
+    "@react-native-community/cli-server-api": ">=11.3.1"
+  },
+  "peerDependenciesMeta": {
+    "@react-native-community/cli-debugger-ui": {
+      "optional": true
+    },
+    "@react-native-community/cli-server-api": {
+      "optional": true
+    }
+  }
+}

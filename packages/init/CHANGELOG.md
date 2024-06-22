@@ -1,0 +1,79 @@
+# @callstack/repack-init
+
+## 4.1.1
+
+## 4.1.0
+
+## 4.0.0
+
+### Major Changes
+
+- [#430](https://github.com/callstack/repack/pull/430) [`0d96b11`](https://github.com/callstack/repack/commit/0d96b11ff3a6e2c21eb622e21ff7947db29a3272) Thanks [@jbroma](https://github.com/jbroma)! - Upgrade to Node 18, drop support for Node 16
+
+### Minor Changes
+
+- [#557](https://github.com/callstack/repack/pull/557) [`8a57f57`](https://github.com/callstack/repack/commit/8a57f57912748efe806dbac52e29a8f4e238652d) Thanks [@jbroma](https://github.com/jbroma)! - Add `custom-version` flag for selecting custom Re.Pack version to install
+
+### Patch Changes
+
+- [#464](https://github.com/callstack/repack/pull/464) [`72c770b`](https://github.com/callstack/repack/commit/72c770bb4ac5540a3c73cf244ca861069a37b045) Thanks [@jbroma](https://github.com/jbroma)! - Upgrade TypeScript, ESLint, TypeDoc in the repository
+
+## 4.0.0-rc.2
+
+## 4.0.0-rc.1
+
+### Minor Changes
+
+- [#557](https://github.com/callstack/repack/pull/557) [`8a57f57`](https://github.com/callstack/repack/commit/8a57f57912748efe806dbac52e29a8f4e238652d) Thanks [@jbroma](https://github.com/jbroma)! - add `custom-version` flag
+
+## 4.0.0-rc.0
+
+### Major Changes
+
+- [#430](https://github.com/callstack/repack/pull/430) [`0d96b11`](https://github.com/callstack/repack/commit/0d96b11ff3a6e2c21eb622e21ff7947db29a3272) Thanks [@jbroma](https://github.com/jbroma)! - BREAKING CHANGE: Upgrade to Node 18, drop support for Node 16.
+
+### Patch Changes
+
+- [#464](https://github.com/callstack/repack/pull/464) [`72c770b`](https://github.com/callstack/repack/commit/72c770bb4ac5540a3c73cf244ca861069a37b045) Thanks [@jbroma](https://github.com/jbroma)! - chore: upgrade TypeScript, ESLint, TypeDoc
+
+## 1.1.0
+
+### Minor Changes
+
+- [#428](https://github.com/callstack/repack/pull/428) [`8a68670`](https://github.com/callstack/repack/commit/8a68670ed14a92341a68cd469330644df168bbeb) Thanks [@jbroma](https://github.com/jbroma)! - Init: Support bun for installing Re.Pack dependencies
+
+## 1.0.4
+
+### Patch Changes
+
+- [#405](https://github.com/callstack/repack/pull/405) [`cbbb5b4`](https://github.com/callstack/repack/commit/cbbb5b485107dc46c4d2bb9f0578237bf4e50fdc) Thanks [@jbroma](https://github.com/jbroma)! - Fix bad behaviour of repack-init when run inside of a monorepo
+
+## 1.0.3
+
+### Patch Changes
+
+- [#363](https://github.com/callstack/repack/pull/363) [`470f10a`](https://github.com/callstack/repack/commit/470f10a7b54ddebd8bd6f4ae65f290c00905d086) Thanks [@jbroma](https://github.com/jbroma)! - Fix bad package name when creating/updating react-native.config.js
+
+## 1.0.2
+
+### Patch Changes
+
+- Build the package properly before publishing to npm 🤦
+
+## 1.0.1
+
+### Patch Changes
+
+- [#357](https://github.com/callstack/repack/pull/357) [`c3e4777`](https://github.com/callstack/repack/commit/c3e4777f91089dcf01ff646c4bcb2e8c6c52b518) Thanks [@jbroma](https://github.com/jbroma)! - Fix executable config in package.json for `init` package
+
+## 1.0.0
+
+### Major Changes
+
+- [#356](https://github.com/callstack/repack/pull/356) [`17faa69`](https://github.com/callstack/repack/commit/17faa69c727827e8ed62ca6a5c5d838d9995d7ce) Thanks [@jbroma](https://github.com/jbroma)! - Introducing `@callstack/repack-init`, which helps you setup RePack in your project in seconds!
+
+  Usage:
+
+  ```
+  npx @callstack/repack-init
+  ```
