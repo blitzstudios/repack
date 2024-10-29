@@ -21,9 +21,7 @@ class HMRClient {
       hideLoadingView: () => void;
     }
   ) {
-    this.url = `ws://${
-      getDevServerLocation().hostname
-    }:${__PUBLIC_PORT__}/__hmr?platform=${__PLATFORM__}`;
+    this.url = `ws://${getDevServerLocation().host}/__hmr?platform=${__PLATFORM__}`;
     this.socket = new WebSocket(this.url);
 
     console.debug('[HMRClient] Connecting...', {
@@ -111,8 +109,8 @@ class HMRClient {
             console.error('Cannot apply update due to error:', error);
             fileUrl = error?.moduleName || '';
           });
-          let n = fileUrl.lastIndexOf('/');
-          let moduleName = fileUrl.substring(n + 1);
+          const n = fileUrl.lastIndexOf('/');
+          const moduleName = fileUrl.substring(n + 1);
           this.app.showLoadingView(`Failed (${moduleName})`, 'refresh');
           return;
         }

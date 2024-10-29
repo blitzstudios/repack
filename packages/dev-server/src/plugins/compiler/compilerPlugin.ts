@@ -84,8 +84,10 @@ async function compilerPlugin(
         if (request.headers.range) {
           // Parse the range header to get the start and end bytes
           const parts = request.headers.range.replace(/bytes=/, '').split('-');
-          const start = parseInt(parts[0], 10);
-          const end = parts[1] ? parseInt(parts[1], 10) : buffer.length - 1;
+          const start = Number.parseInt(parts[0], 10);
+          const end = parts[1]
+            ? Number.parseInt(parts[1], 10)
+            : buffer.length - 1;
 
           // Create a new buffer that only includes the part of the file requested
           const chunk = buffer.slice(start, end + 1);

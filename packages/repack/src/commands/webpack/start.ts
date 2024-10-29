@@ -40,7 +40,11 @@ export async function start(_: string[], config: Config, args: StartArguments) {
     config.root,
     args.webpackConfig
   );
-  const { reversePort: reversePortArg, sendEvents: sendEventsArg, ...restArgs } = args;
+  const {
+    reversePort: reversePortArg,
+    sendEvents: sendEventsArg,
+    ...restArgs
+  } = args;
   const cliOptions: StartCliOptions = {
     config: {
       root: config.root,

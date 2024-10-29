@@ -6,6 +6,8 @@ import type { WebpackContext } from './types';
  */
 export namespace Federated {
   /**
+   * @deprecated
+   *
    * Resolves URL to a container or a chunk when using Module Federation,
    * based on given `scriptId` and `caller`.
    */
@@ -15,6 +17,8 @@ export namespace Federated {
   ) => string | ((webpackContext: WebpackContext) => string) | undefined;
 
   /**
+   * @deprecated
+   *
    * Configuration options for {@link createURLResolver} for Module Federation.
    * Allows to configure how created {@link URLResolver} will behave.
    */
@@ -99,6 +103,8 @@ export namespace Federated {
   }
 
   /**
+   * @deprecated
+   *
    * Creates URL resolver for Module Federation from provided config.
    *
    * @example
@@ -222,6 +228,8 @@ export namespace Federated {
   declare let self: Record<string, any>;
 
   /**
+   * @deprecated
+   *
    * Dynamically imports module from a Module Federation container. Similar to `import('file')`, but
    * specific to Module Federation. Calling `importModule` will create an async boundary.
    *
@@ -253,8 +261,8 @@ export namespace Federated {
   export async function importModule<Exports = any>(
     containerName: string,
     module: string,
-    scope: string = 'default',
-    force: boolean = false
+    scope = 'default',
+    force = false
   ): Promise<Exports> {
     if (!__webpack_share_scopes__[scope]?.__isInitialized) {
       // Initializes the share scope.

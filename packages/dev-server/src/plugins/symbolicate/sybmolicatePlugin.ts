@@ -20,7 +20,7 @@ async function symbolicatePlugin(
     // we cannot use JSON schema to validate the body.
 
     try {
-      let { stack } = JSON.parse(request.body as string) as {
+      const { stack } = JSON.parse(request.body as string) as {
         stack: ReactNativeStackFrame[];
       };
 
@@ -28,8 +28,8 @@ async function symbolicatePlugin(
         ?.platform;
 
       for (let i = 0; i < stack.length; i++) {
-        let file = stack[i].file as string;
-        let bundle = path.parse(file).base;
+        const file = stack[i].file as string;
+        const bundle = path.parse(file).base;
 
         // When running in visual studio code, our bundle is copied to a local location:
         // clients/app-mobile/.vscode/.react/index.bundle.
