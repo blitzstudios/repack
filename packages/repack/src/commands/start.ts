@@ -42,17 +42,16 @@ export async function start(_: string[], config: Config, args: StartArguments) {
       webpackConfigPath,
     },
     command: 'start',
-    arguments: {
-      // `platform` is empty, since it will be filled in later by `DevServerProxy`
-      start: { ...restArgs, platform: '' },
-    },
+    arguments: { start: { ...restArgs } },
   };
 
   const reversePort = reversePortArg ?? process.argv.includes('--reverse-port');
   const isSilent = args.silent;
   const isVerbose = isSilent
     ? false
-    : args.verbose ?? process.argv.includes('--verbose');
+    : // TODO fix in a separate PR (jbroma)
+      // eslint-disable-next-line prettier/prettier
+      args.verbose ?? process.argv.includes('--verbose');
   const reporter = composeReporters(
     [
       new ConsoleReporter({
@@ -267,8 +266,20 @@ async function runAdbReverse(ctx: Server.DelegateContext, port: number) {
 }
 
 function parseFileUrl(fileUrl: string) {
-  const { pathname: filename, searchParams } = new URL(fileUrl);
+  const { pathname, searchParams } = new URL(fileUrl);
   let platform = searchParams.get('platform');
+  let filename = pathname;
+
+  if (!platform) {
+    const pathArray = pathname.split('/');
+    const platformFromPath = pathArray[1];
+
+    if (platformFromPath === 'ios' || platformFromPath === 'android') {
+      platform = platformFromPath;
+      filename = pathArray.slice(2).join('/');
+    }
+  }
+
   if (!platform) {
     const [, platformOrName, name] = filename.split('.').reverse();
     if (name !== undefined) {
