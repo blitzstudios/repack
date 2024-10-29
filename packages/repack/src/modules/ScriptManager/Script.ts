@@ -1,9 +1,10 @@
 import shallowEqual from 'shallowequal';
-import type {
-  NormalizedScriptLocator,
-  ScriptLocator,
-  WebpackContext,
-} from './types';
+import {
+  type NormalizedScriptLocator,
+  NormalizedScriptLocatorHTTPMethod,
+  NormalizedScriptLocatorSignatureVerificationMode,
+} from './NativeScriptManager';
+import type { ScriptLocator, WebpackContext } from './types';
 
 /**
  * Representation of a Script to load and execute, used by {@link ScriptManager}.
@@ -58,6 +59,19 @@ export class Script {
   }
 
   /**
+   * Get unique identifier for the script.
+   *
+   * Used to create unique identifier for the script, which serves as its key in the cache.
+   *
+   * @param scriptId Id of the script.
+   * @param caller Optional caller name to prefix the script id.
+   */
+  static getScriptUniqueId(scriptId: string, caller?: string) {
+    const prefix = caller ? caller + '_' : '';
+    return prefix + scriptId;
+  }
+
+  /**
    * Create new instance of `Script` from non-normalized script locator data.
    *
    * @param locator Non-normalized locator data.
@@ -74,6 +88,8 @@ export class Script {
     new Headers(locator.headers).forEach((value: string, key: string) => {
       headers[key.toLowerCase()] = value;
     });
+
+    const uniqueId = Script.getScriptUniqueId(key.scriptId, key.caller);
 
     let body: NormalizedScriptLocator['body'];
     if (locator.body instanceof FormData) {
@@ -104,15 +120,22 @@ export class Script {
       key.scriptId,
       key.caller,
       {
-        method: locator.method ?? 'GET',
+        uniqueId,
+        method:
+          (locator.method as NormalizedScriptLocatorHTTPMethod) ??
+          NormalizedScriptLocatorHTTPMethod.GET,
         url: locator.url,
         absolute: locator.absolute ?? false,
         timeout: locator.timeout ?? Script.DEFAULT_TIMEOUT,
+        retry: locator.retry,
+        retryDelay: locator.retryDelay,
         query: new URLSearchParams(locator.query).toString() || undefined,
         body,
         headers: Object.keys(headers).length ? headers : undefined,
         fetch: locator.cache === false ? true : fetch,
-        verifyScriptSignature: locator.verifyScriptSignature ?? 'off',
+        verifyScriptSignature:
+          (locator.verifyScriptSignature as NormalizedScriptLocatorSignatureVerificationMode) ??
+          NormalizedScriptLocatorSignatureVerificationMode.OFF,
       },
       locator.cache
     );
@@ -129,7 +152,10 @@ export class Script {
   constructor(
     public readonly scriptId: string,
     public readonly caller: string | undefined,
-    public readonly locator: NormalizedScriptLocator,
+    public readonly locator: NormalizedScriptLocator & {
+      retry?: number;
+      retryDelay?: number;
+    },
     public readonly cache: boolean = true
   ) {}
 

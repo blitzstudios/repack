@@ -29,21 +29,29 @@ RCT_EXPORT_MODULE()
 
 @synthesize bridge = _bridge;
 
+#ifdef RCT_NEW_ARCH_ENABLED
 RCT_EXPORT_METHOD(loadScript
-                  : (nonnull NSString *)scriptId config
-                  : (nonnull NSDictionary *)configDictionary resolve
+                  : (nonnull NSString *)scriptId scriptConfig
+                  : (JS::NativeScriptManager::NormalizedScriptLocator &)scriptConfig resolve
                   : (RCTPromiseResolveBlock)resolve reject
                   : (RCTPromiseRejectBlock)reject)
+#else
+RCT_EXPORT_METHOD(loadScript
+                  : (nonnull NSString *)scriptId scriptConfig
+                  : (nonnull NSDictionary *)scriptConfig resolve
+                  : (RCTPromiseResolveBlock)resolve reject
+                  : (RCTPromiseRejectBlock)reject)
+#endif
 {
-  [self runInBackground:^() {
-    ScriptConfig *config;
-    @try {
-      config = [ScriptConfig fromConfigDictionary:configDictionary withScriptId:scriptId];
-    } @catch (NSError *error) {
-      reject(ScriptConfigError, error.localizedDescription, nil);
-      return;
-    }
+  ScriptConfig *config;
+  @try {
+    config = [ScriptConfig fromConfig:scriptConfig withScriptId:scriptId];
+  } @catch (NSError *error) {
+    reject(ScriptConfigError, error.localizedDescription, nil);
+    return;
+  }
 
+  [self runInBackground:^() {
     // Handle http & https
     if ([[config.url scheme] hasPrefix:@"http"]) {
       if (config.fetch) {
@@ -52,11 +60,11 @@ RCT_EXPORT_METHOD(loadScript
                if (error) {
                  reject(ScriptDownloadFailure, error.localizedFailureReason, nil);
                } else {
-                 [self execute:config.scriptId url:config.url resolve:resolve reject:reject];
+                 [self execute:config resolve:resolve reject:reject];
                }
              }];
       } else {
-        [self execute:scriptId url:config.url resolve:resolve reject:reject];
+        [self execute:config resolve:resolve reject:reject];
       }
 
     } else if ([[config.url scheme] isEqualToString:@"file"]) {
@@ -70,15 +78,23 @@ RCT_EXPORT_METHOD(loadScript
   }];
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
 RCT_EXPORT_METHOD(prefetchScript
-                  : (nonnull NSString *)scriptId config
-                  : (nonnull NSDictionary *)configDictionary resolve
+                  : (nonnull NSString *)scriptId scriptConfig
+                  : (JS::NativeScriptManager::NormalizedScriptLocator &)scriptConfig resolve
                   : (RCTPromiseResolveBlock)resolve reject
                   : (RCTPromiseRejectBlock)reject)
+#else
+RCT_EXPORT_METHOD(prefetchScript
+                  : (nonnull NSString *)scriptId scriptConfig
+                  : (nonnull NSDictionary *)scriptConfig resolve
+                  : (RCTPromiseResolveBlock)resolve reject
+                  : (RCTPromiseRejectBlock)reject)
+#endif
 {
   ScriptConfig *config;
   @try {
-    config = [ScriptConfig fromConfigDictionary:configDictionary withScriptId:scriptId];
+    config = [ScriptConfig fromConfig:scriptConfig withScriptId:scriptId];
   } @catch (NSError *error) {
     reject(ScriptConfigError, error.localizedDescription, nil);
     return;
@@ -140,18 +156,42 @@ RCT_EXPORT_METHOD(invalidateScripts
   }];
 }
 
-- (void)execute:(NSString *)scriptId
-            url:(NSURL *)url
-        resolve:(RCTPromiseResolveBlock)resolve
-         reject:(RCTPromiseRejectBlock)reject
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(unstable_evaluateScript
+                                       : (NSString *)scriptSource scriptSourceUrl
+                                       : (NSString *)scriptSourceUrl)
 {
-  NSString *scriptPath = [self getScriptFilePath:scriptId];
+  facebook::jsi::Runtime *runtime = [self getJavaScriptRuntimePointer];
+
+  if (!runtime) {
+    @throw [NSError errorWithDomain:@"Can't access React Native runtime" code:0 userInfo:nil];
+  }
+
+  std::string source{[scriptSource UTF8String]};
+  std::string sourceUrl{[scriptSourceUrl UTF8String]};
+
+  runtime->evaluateJavaScript(std::make_unique<facebook::jsi::StringBuffer>(std::move(source)), sourceUrl);
+  return @YES;
+}
+
+- (void)execute:(ScriptConfig *)config resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  NSString *scriptPath = [self getScriptFilePath:config.uniqueId];
   @try {
     NSFileManager *manager = [NSFileManager defaultManager];
+    if (![[NSFileManager defaultManager] fileExistsAtPath:scriptPath]) {
+      NSString *errorMessage = [NSString stringWithFormat:@"Script file does not exist at path: %@", scriptPath];
+      @throw [NSError errorWithDomain:errorMessage code:0 userInfo:nil];
+    }
+
     NSData *data = [manager contentsAtPath:scriptPath];
-    [self evaluateJavascript:data url:url resolve:resolve reject:reject];
+    if (!data) {
+      NSString *errorMessage = [NSString stringWithFormat:@"Script file exists but could not be read: %@", scriptPath];
+      @throw [NSError errorWithDomain:errorMessage code:0 userInfo:nil];
+    }
+
+    [self evaluateJavascript:data url:config.uniqueId resolve:resolve reject:reject];
   } @catch (NSError *error) {
-    reject(CodeExecutionFailure, error.localizedDescription, nil);
+    reject(CodeExecutionFailure, error.domain, nil);
   }
 }
 
@@ -163,15 +203,15 @@ RCT_EXPORT_METHOD(invalidateScripts
   return [rootDirectoryPath stringByAppendingPathComponent:@"scripts"];
 }
 
-- (NSString *)getScriptFilePath:(NSString *)scriptId
+- (NSString *)getScriptFilePath:(NSString *)scriptUniqueId
 {
-  NSString *scriptPath = [[self getScriptsDirectoryPath] stringByAppendingPathComponent:scriptId];
+  NSString *scriptPath = [[self getScriptsDirectoryPath] stringByAppendingPathComponent:scriptUniqueId];
   return [scriptPath stringByAppendingPathExtension:@"script.bundle"];
 }
 
 - (void)downloadAndCache:(ScriptConfig *)config completionHandler:(void (^)(NSError *error))callback
 {
-  NSString *scriptFilePath = [self getScriptFilePath:config.scriptId];
+  NSString *scriptFilePath = [self getScriptFilePath:config.uniqueId];
   NSString *scriptsDirectoryPath = [self getScriptsDirectoryPath];
 
   NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:config.url];
@@ -195,8 +235,18 @@ RCT_EXPORT_METHOD(invalidateScripts
   NSURLSessionDataTask *task = [[NSURLSession sharedSession]
       dataTaskWithRequest:request
         completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+          NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
+          NSInteger statusCode = [httpResponse statusCode];
           if (error != nil) {
             callback(error);
+          } else if (statusCode < 200 || statusCode >= 300) {
+            NSDictionary *userInfo = @{
+              NSLocalizedFailureReasonErrorKey : [NSString
+                  stringWithFormat:@"Request should have returned with 200 HTTP status, but instead it received %ld",
+                                   (long)statusCode]
+            };
+            NSError *httpError = [NSError errorWithDomain:NSURLErrorDomain code:statusCode userInfo:userInfo];
+            callback(httpError);
           } else {
             @try {
               NSDictionary<NSString *, id> *result = [CodeSigningUtils extractBundleAndTokenWithFileContent:data];
@@ -254,7 +304,7 @@ RCT_EXPORT_METHOD(invalidateScripts
       filesystemScriptUrl = [[NSBundle mainBundle] URLForResource:scriptName withExtension:scriptExtension];
     }
     NSData *data = [[NSData alloc] initWithContentsOfFile:[filesystemScriptUrl path]];
-    [self evaluateJavascript:data url:filesystemScriptUrl resolve:resolve reject:reject];
+    [self evaluateJavascript:data url:config.uniqueId resolve:resolve reject:reject];
   } @catch (NSError *error) {
     reject(CodeExecutionFailure, error.localizedDescription, nil);
   }
@@ -271,7 +321,7 @@ RCT_EXPORT_METHOD(invalidateScripts
 }
 
 - (void)evaluateJavascript:(NSData *)code
-                       url:(NSURL *)url
+                       url:(NSString *)url
                    resolve:(RCTPromiseResolveBlock)resolve
                     reject:(RCTPromiseRejectBlock)reject
 {
@@ -291,7 +341,7 @@ RCT_EXPORT_METHOD(invalidateScripts
   }
 
   std::string source{static_cast<const char *>([code bytes]), [code length]};
-  std::string sourceUrl{[[url absoluteString] UTF8String]};
+  std::string sourceUrl{[url UTF8String]};
 
   callInvoker->invokeAsync([source = std::move(source), sourceUrl = std::move(sourceUrl), runtime, resolve, reject]() {
     // use c++ error handling here
@@ -310,7 +360,6 @@ RCT_EXPORT_METHOD(invalidateScripts
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), callback);
 }
 
-// Don't compile this code when we build for the old architecture.
 #ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params

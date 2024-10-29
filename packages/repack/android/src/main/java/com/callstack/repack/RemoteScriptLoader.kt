@@ -13,12 +13,12 @@ import java.io.FileInputStream
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-class RemoteScriptLoader(reactContext: ReactContext) : NativeScriptLoader(reactContext) {
+class RemoteScriptLoader(val reactContext: ReactContext, private val nativeLoader: NativeScriptLoader) {
     private val scriptsDirName = "scripts"
     private val client = OkHttpClient()
 
-    private fun getScriptFilePath(id: String): String {
-        return "${scriptsDirName}/$id.script.bundle"
+    private fun getScriptFilePath(scriptUniqueId: String): String {
+        return "${scriptsDirName}/$scriptUniqueId.script.bundle"
     }
 
     private fun createClientPerRequest(config: ScriptConfig): OkHttpClient {
@@ -30,7 +30,7 @@ class RemoteScriptLoader(reactContext: ReactContext) : NativeScriptLoader(reactC
     }
 
     private fun downloadAndCache(config: ScriptConfig, onSuccess: () -> Unit, onError: (code: String, message: String) -> Unit) {
-        val path = getScriptFilePath(config.id)
+        val path = getScriptFilePath(config.uniqueId)
         val file = File(reactContext.filesDir, path)
 
         val callback = object : Callback {
@@ -95,10 +95,19 @@ class RemoteScriptLoader(reactContext: ReactContext) : NativeScriptLoader(reactC
     }
 
     fun execute(config: ScriptConfig, promise: Promise) {
+        val scriptPath = getScriptFilePath(config.uniqueId)
         try {
-            val path = File(reactContext.filesDir, getScriptFilePath(config.id))
-            val code: ByteArray = FileInputStream(path).use { it.readBytes() }
-            evaluate(code, path.toString(), promise)
+            val file = File(reactContext.filesDir, scriptPath)
+            if (!file.exists()) {
+                throw Exception("Script file does not exist: $file")
+            }
+            
+            val code = FileInputStream(file).use { it.readBytes() }
+            if (code.isEmpty()) {
+                throw Exception("Script file exists but could not be read: $file")
+            }
+
+            nativeLoader.evaluate(code, config.uniqueId, promise)
         } catch (error: Exception) {
             promise.reject(
                     ScriptLoadingError.ScriptEvalFailure.code,
@@ -112,7 +121,7 @@ class RemoteScriptLoader(reactContext: ReactContext) : NativeScriptLoader(reactC
         downloadAndCache(config, { promise.resolve(null) }, { code, message -> promise.reject(code, message) })
     }
 
-    override fun load(config: ScriptConfig, promise: Promise) {
+    fun load(config: ScriptConfig, promise: Promise) {
         downloadAndCache(config, {
             execute(config, promise)
         }, { code, message -> promise.reject(code, message) })

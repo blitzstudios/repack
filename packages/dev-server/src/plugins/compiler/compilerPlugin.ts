@@ -22,12 +22,12 @@ async function compilerPlugin(
     },
     handler: async (request, reply) => {
       console.log('[CompilerPlugin] compile:', request?.url);
-      let file = (request.params as { '*'?: string })['*'];
+      let filename = (request.params as { '*'?: string })['*'];
       let { platform } = request.query as { platform?: string };
 
-      if (!file) {
+      if (!filename) {
         // This technically should never happen - this route should not be called if file is missing.
-        request.log.error(`File was not provided`);
+        request.log.error('File was not provided');
         return reply.notFound();
       }
 
@@ -41,8 +41,8 @@ async function compilerPlugin(
       }
 
       // If platform happens to be in front of an asset remove it.
-      if (file.startsWith(`${platform}/`)) {
-        file = file.replace(`${platform}/`, '');
+      if (filename.startsWith(`${platform}/`)) {
+        filename = filename.replace(`${platform}/`, '');
       }
 
       const multipart = reply.asMultipart();
@@ -59,11 +59,15 @@ async function compilerPlugin(
 
       try {
         const asset = await delegate.compiler.getAsset(
-          file,
+          filename,
           platform,
           sendProgress
         );
-        const mimeType = delegate.compiler.getMimeType(file, platform, asset);
+        const mimeType = delegate.compiler.getMimeType(
+          filename,
+          platform,
+          asset
+        );
         const buffer = Buffer.isBuffer(asset) ? asset : Buffer.from(asset);
 
         if (multipart) {

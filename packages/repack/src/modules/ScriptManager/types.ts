@@ -69,6 +69,26 @@ export interface ScriptLocator {
   timeout?: number;
 
   /**
+   * Number of times to retry fetching the script in case of failure.
+   *
+   * If the script fails to download due to network issues or server errors,
+   * this field determines how many additional attempts should be made to fetch it.
+   * A value of `0` means no retries will be attempted.
+   * Defaults to `0` if not specified.
+   */
+  retry?: number;
+
+  /**
+   * Delay in milliseconds between each retry attempt.
+   *
+   * This field specifies the wait time between consecutive retry attempts
+   * if the script download fails. It helps to avoid immediate retries and allows
+   * the network or server to recover before trying again.
+   * Defaults to `0` if not specified.
+   */
+  retryDelay?: number;
+
+  /**
    * Flag indicating whether the URL is an absolute FileSystem URL on a target device.
    * Useful if you're using custom code to download the script and you want `ScriptManager` to
    * execute it only from a custom FileSystem path.
@@ -96,6 +116,7 @@ export interface ScriptLocator {
    * `off` means that the script's code-signature will not be verfied
    */
   verifyScriptSignature?: 'strict' | 'lax' | 'off';
+
   /**
    * Function called before loading or getting from the cache and after resolving the script locator.
    * It's an async function which should return a boolean indicating whether the script should be loaded or use default behaviour.
@@ -146,38 +167,4 @@ export interface StorageApi {
   setItem: (key: string, value: string) => Promise<void>;
   /** Removes the item based on the key. */
   removeItem: (key: string) => Promise<void>;
-}
-
-/**
- * Internal representation of script locator data.
- *
- * @internal
- */
-export interface NormalizedScriptLocator {
-  /** HTTP method. */
-  method: 'GET' | 'POST';
-
-  /** Path-only URL to a script's location. */
-  url: string;
-
-  /** Whether to fetch script from the network or use cached one. */
-  fetch: boolean;
-
-  /** Custom timeout for script fetch requests. */
-  timeout: number;
-
-  /** Whether script's URL is an absolute FileSystem URL on a target device. */
-  absolute: boolean;
-
-  /** Query params. */
-  query?: string;
-
-  /** Request headers. */
-  headers?: Record<string, string>;
-
-  /** Request body. */
-  body?: string;
-
-  /** Whether script's signature should be verified or not */
-  verifyScriptSignature?: 'strict' | 'lax' | 'off';
 }
