@@ -1,6 +1,6 @@
 {
   "name": "@callstack/repack",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "A toolkit to build your React Native application with Rspack or Webpack.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -83,7 +83,7 @@
     "@module-federation/enhanced": ">=0.6.10",
     "@react-native-community/cli": "*",
     "@react-native-community/cli-types": "*",
-    "@rspack/core": "=>1",
+    "@rspack/core": ">=1",
     "@rspack/plugin-react-refresh": ">=1",
     "react-native": ">=0.74",
     "webpack": ">=5.90"
@@ -100,7 +100,7 @@
     }
   },
   "dependencies": {
-    "@callstack/repack-dev-server": "blitzstudios/repack.git#callstack-repack-dev-server-v0.5.2-gitpkg",
+    "@callstack/repack-dev-server": "blitzstudios/repack.git#callstack-repack-dev-server-v0.5.3-gitpkg",
     "@discoveryjs/json-ext": "^0.5.7",
     "colorette": "^2.0.20",
     "dedent": "^0.7.0",
@@ -123,8 +123,8 @@
     "@babel/core": "^7.25.2",
     "@babel/plugin-transform-export-namespace-from": "^7.24.6",
     "@babel/plugin-transform-modules-commonjs": "^7.23.2",
-    "@react-native-community/cli": "15.0.0-alpha.2",
-    "@react-native-community/cli-types": "15.0.0-alpha.2",
+    "@react-native-community/cli": "15.0.1",
+    "@react-native-community/cli-types": "15.0.1",
     "@module-federation/enhanced": "0.6.10",
     "@module-federation/sdk": "0.6.10",
     "@rspack/core": "1.0.8",
@@ -141,7 +141,7 @@
     "clang-format": "^1.8.0",
     "jest": "^29.7.0",
     "react": "18.3.1",
-    "react-native": "0.76.0-rc.6",
+    "react-native": "0.76.1",
     "rspack-plugin-virtual-module": "^0.1.13",
     "typescript": "^5.5.3",
     "webpack": "^5.94.0"
