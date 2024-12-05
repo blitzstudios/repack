@@ -501,7 +501,7 @@ export class ScriptManager extends EventEmitter {
       });
 
       await this.saveCache();
-      await this.nativeScriptManager.invalidateScripts(scriptIds);
+      await this.nativeScriptManager.invalidateScripts(ids);
 
       this.emit('invalidated', ids);
       return ids;
