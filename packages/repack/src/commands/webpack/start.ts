@@ -75,7 +75,7 @@ export async function start(_: string[], config: Config, args: StartArguments) {
 
   const compiler = new Compiler(cliOptions, reporter);
 
-  const serverHost = args.host || DEFAULT_HOSTNAME;
+  const serverHost = args.host || "0.0.0.0";
   const serverPort = args.port ?? DEFAULT_PORT;
   const serverURL = `${args.https === true ? 'https' : 'http'}://${serverHost}:${serverPort}`;
   const showHttpRequests = args.verbose || args.logRequests;
