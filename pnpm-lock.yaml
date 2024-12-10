@@ -428,8 +428,8 @@ importers:
   packages/repack:
     dependencies:
       '@callstack/repack-dev-server':
-        specifier: blitzstudios/repack.git#callstack-repack-dev-server-v0.5.3-gitpkg
-        version: https://codeload.github.com/blitzstudios/repack/tar.gz/a09c48e61553dee8fd030aa34d11f82dcaa74f29(@react-native-community/cli-server-api@15.0.1)
+        specifier: blitzstudios/repack.git#callstack-repack-dev-server-v5.0.0-gitpkg
+        version: https://codeload.github.com/blitzstudios/repack/tar.gz/9fc86e57d16015c5fea22085741af68ac6e628b0(@react-native-community/cli-server-api@15.0.1)
       '@discoveryjs/json-ext':
         specifier: ^0.5.7
         version: 0.5.7
@@ -1412,9 +1412,9 @@ packages:
   '@bufbuild/protobuf@2.2.0':
     resolution: {integrity: sha512-+imAQkHf7U/Rwvu0wk1XWgsP3WnpCWmK7B48f0XqSNzgk64+grljTKC7pnO/xBiEMUziF7vKRfbBnOQhg126qQ==}
 
-  '@callstack/repack-dev-server@https://codeload.github.com/blitzstudios/repack/tar.gz/a09c48e61553dee8fd030aa34d11f82dcaa74f29':
-    resolution: {tarball: https://codeload.github.com/blitzstudios/repack/tar.gz/a09c48e61553dee8fd030aa34d11f82dcaa74f29}
-    version: 0.5.3
+  '@callstack/repack-dev-server@https://codeload.github.com/blitzstudios/repack/tar.gz/9fc86e57d16015c5fea22085741af68ac6e628b0':
+    resolution: {tarball: https://codeload.github.com/blitzstudios/repack/tar.gz/9fc86e57d16015c5fea22085741af68ac6e628b0}
+    version: 5.0.0
     engines: {node: '>=18'}
     peerDependencies:
       '@react-native-community/cli-server-api': '>=13.6.4'
@@ -8494,7 +8494,7 @@ snapshots:
 
   '@bufbuild/protobuf@2.2.0': {}
 
-  '@callstack/repack-dev-server@https://codeload.github.com/blitzstudios/repack/tar.gz/a09c48e61553dee8fd030aa34d11f82dcaa74f29(@react-native-community/cli-server-api@15.0.1)':
+  '@callstack/repack-dev-server@https://codeload.github.com/blitzstudios/repack/tar.gz/9fc86e57d16015c5fea22085741af68ac6e628b0(@react-native-community/cli-server-api@15.0.1)':
     dependencies:
       '@babel/code-frame': 7.25.7
       '@fastify/middie': 8.3.1
