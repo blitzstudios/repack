@@ -64,6 +64,8 @@ export interface RepackPluginConfig {
    * Setting this to `false` disables {@link LoggerPlugin}.
    */
   logger?: LoggerPluginConfig['output'] | boolean;
+
+  listenerIP?: string;
 }
 
 /**
@@ -149,6 +151,7 @@ export class RepackPlugin implements RspackPluginInstance {
 
     new compiler.webpack.DefinePlugin({
       __DEV__: JSON.stringify(this.config.mode === 'development'),
+      __E2E__: JSON.stringify(process.env.E2E),
     }).apply(compiler);
 
     new OutputPlugin({
@@ -173,6 +176,7 @@ export class RepackPlugin implements RspackPluginInstance {
 
     new DevelopmentPlugin({
       devServer: this.config.devServer,
+      listenerIP: this.config?.listenerIP,
       entryName,
       platform: this.config.platform,
     }).apply(compiler);

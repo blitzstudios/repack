@@ -247,6 +247,7 @@ export namespace Federated {
    * @param module Full name with extension of the module to import from the container - only modules
    * exposed in `exposes` in `webpack.container.ModuleFederationPlugin` can be used.
    * @param scope Optional, scope for sharing modules between containers. Defaults to `'default'`.
+   * @param force Optional, forces reloading of this module even if it has been loaded before. Defaults to false.
    * @returns Exports of given `module` from given container.
    *
    * @example
@@ -262,13 +263,22 @@ export namespace Federated {
   export async function importModule<Exports = any>(
     containerName: string,
     module: string,
-    scope = 'default'
+    scope = 'default',
+    force = false
   ): Promise<Exports> {
     if (!__webpack_share_scopes__[scope]?.__isInitialized) {
       // Initializes the share scope.
       // This fills it with known provided modules from this build and all remotes.
       await __webpack_init_sharing__(scope);
       __webpack_share_scopes__[scope].__isInitialized = true;
+    }
+
+    // If we want to force this module to load, even if already loaded,
+    // remove the container and clear any dependencies from the cache first.
+    if (force) {
+      delete self[containerName];
+      delete self[`webpackChunk${containerName}`];
+      delete self[`webpackHotUpdate${containerName}`];
     }
 
     // Do not use `const container = self[containerName];` here. Once container is loaded

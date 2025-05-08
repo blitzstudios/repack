@@ -29,6 +29,7 @@ export interface StartArguments {
   verbose?: boolean;
   config?: string;
   webpackConfig?: string;
+  sendEvents?: string;
 }
 
 interface CommonCliOptions {

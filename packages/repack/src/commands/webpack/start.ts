@@ -1,3 +1,4 @@
+import path from 'path';
 import type { Server } from '@callstack/repack-dev-server';
 import type { Config } from '@react-native-community/cli-types';
 import * as colorette from 'colorette';
@@ -40,7 +41,7 @@ export async function start(_: string[], config: Config, args: StartArguments) {
     config.root,
     args.config ?? args.webpackConfig
   );
-  const { reversePort, ...restArgs } = args;
+  const { reversePort, sendEvents: sendEventsArg, ...restArgs } = args;
   const cliOptions: StartCliOptions = {
     config: {
       root: config.root,
@@ -74,7 +75,7 @@ export async function start(_: string[], config: Config, args: StartArguments) {
 
   const compiler = new Compiler(cliOptions, reporter);
 
-  const serverHost = args.host || DEFAULT_HOSTNAME;
+  const serverHost = args.host || "0.0.0.0";
   const serverPort = args.port ?? DEFAULT_PORT;
   const serverURL = `${args.https === true ? 'https' : 'http'}://${serverHost}:${serverPort}`;
   const showHttpRequests = args.verbose || args.logRequests;
@@ -120,6 +121,7 @@ export async function start(_: string[], config: Config, args: StartArguments) {
       const lastStats: Record<string, webpack.StatsCompilation> = {};
 
       compiler.on('watchRun', ({ platform }) => {
+        console.log('[CompilerPlugin] hook: watchRun');
         ctx.notifyBuildStart(platform);
         if (platform === 'android') {
           void runAdbReverse(args.port ?? DEFAULT_PORT, ctx.log);
@@ -127,6 +129,7 @@ export async function start(_: string[], config: Config, args: StartArguments) {
       });
 
       compiler.on('invalid', ({ platform }) => {
+        console.log('[CompilerPlugin] hook: invalid');
         ctx.notifyBuildStart(platform);
         ctx.broadcastToHmrClients({ action: 'building' }, platform);
       });
@@ -140,6 +143,7 @@ export async function start(_: string[], config: Config, args: StartArguments) {
           platform: string;
           stats: webpack.StatsCompilation;
         }) => {
+          console.log('[CompilerPlugin] hook: done');
           ctx.notifyBuildEnd(platform);
           lastStats[platform] = stats;
           ctx.broadcastToHmrClients(
@@ -217,9 +221,17 @@ export async function start(_: string[], config: Config, args: StartArguments) {
 
   await start();
 
+  let sendEventsStop = () => {};
+  if (sendEventsArg) {
+    const sendEventsPath = path.join(config.root, sendEventsArg);
+    const { default: sendEvents } = await import(sendEventsPath);
+    sendEventsStop = await sendEvents(config.root);
+  }
+
   return {
     stop: async () => {
       reporter.stop();
+      sendEventsStop();
       await stop();
     },
   };

@@ -15,6 +15,7 @@ export interface DevelopmentPluginConfig {
   entryName?: string;
   platform: string;
   devServer?: DevServerOptions;
+  listenerIP?: string;
 }
 
 /**
@@ -50,6 +51,7 @@ export class DevelopmentPlugin implements RspackPluginInstance {
       __PUBLIC_PROTOCOL__: this.config.devServer.https ? '"https"' : '"http"',
       __PUBLIC_HOST__: JSON.stringify(this.config.devServer.host),
       __PUBLIC_PORT__: Number(this.config.devServer.port),
+      __LISTENER_IP__: JSON.stringify(this.config.listenerIP),
       __REACT_NATIVE_MAJOR_VERSION__: Number(majorVersion),
       __REACT_NATIVE_MINOR_VERSION__: Number(minorVersion),
       __REACT_NATIVE_PATCH_VERSION__: Number(patchVersion),
