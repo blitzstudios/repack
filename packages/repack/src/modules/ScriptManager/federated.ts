@@ -1,5 +1,4 @@
-import { ScriptManager } from './ScriptManager';
-import type { WebpackContext } from './types';
+import { ScriptManager } from './ScriptManager.js';
 
 /**
  * Namespace for runtime utilities for Module Federation.
@@ -14,7 +13,10 @@ export namespace Federated {
   export type URLResolver = (
     scriptId: string,
     caller?: string
-  ) => string | ((webpackContext: WebpackContext) => string) | undefined;
+  ) =>
+    | string
+    | ((webpackContext: RepackRuntimeGlobals.WebpackRequire) => string)
+    | undefined;
 
   /**
    * @deprecated
@@ -206,7 +208,7 @@ export namespace Federated {
           );
 
           if (url.includes('[ext]')) {
-            return (webpackContext: WebpackContext) =>
+            return (webpackContext: RepackRuntimeGlobals.WebpackRequire) =>
               webpackContext.u(url.replace(/\[ext\]/g, ''));
           }
 

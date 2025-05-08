@@ -1,65 +1,64 @@
 import path from 'path';
+// @ts-expect-error type-only import
 import type { Server } from '@callstack/repack-dev-server';
-import type { Config } from '@react-native-community/cli-types';
-import * as colorette from 'colorette';
-import type webpack from 'webpack';
+import type { Configuration, StatsCompilation } from 'webpack';
 import packageJson from '../../../package.json';
-import { VERBOSE_ENV_KEY } from '../../env';
 import {
   ConsoleReporter,
   FileReporter,
   type Reporter,
   composeReporters,
   makeLogEntryFromFastifyLog,
-} from '../../logging';
+} from '../../logging/index.js';
+import type { HMRMessage } from '../../types.js';
+import { CLIError } from '../common/cliError.js';
+import { makeCompilerConfig } from '../common/config/makeCompilerConfig.js';
 import {
   getMimeType,
-  getWebpackConfigFilePath,
   parseFileUrl,
   runAdbReverse,
   setupInteractions,
-} from '../common';
-import { DEFAULT_HOSTNAME, DEFAULT_PORT } from '../consts';
-import type { StartArguments, StartCliOptions } from '../types';
-import { Compiler } from './Compiler';
-import type { HMRMessageBody } from './types';
+} from '../common/index.js';
+import logo from '../common/logo.js';
+import { setupEnvironment } from '../common/setupEnvironment.js';
+import type { CliConfig, StartArguments } from '../types.js';
+import { Compiler } from './Compiler.js';
 
 /**
- * Start command for React Native Community CLI.
- * It runs `@callstack/repack-dev-server` to provide Development Server functionality to React Native apps
+ * Start command that runs a development server.
+ * It runs `@callstack/repack-dev-server` to provide Development Server functionality
  * in development mode.
  *
  * @param _ Original, non-parsed arguments that were provided when running this command.
- * @param config React Native Community CLI configuration object.
+ * @param cliConfig Configuration object containing platform and project settings.
  * @param args Parsed command line arguments.
- *
- * @internal
- * @category CLI command
  */
-export async function start(_: string[], config: Config, args: StartArguments) {
-  const webpackConfigPath = getWebpackConfigFilePath(
-    config.root,
-    args.config ?? args.webpackConfig
-  );
-  const { reversePort, sendEvents: sendEventsArg, ...restArgs } = args;
-  const cliOptions: StartCliOptions = {
-    config: {
-      root: config.root,
-      platforms: Object.keys(config.platforms),
-      bundlerConfigPath: webpackConfigPath,
-      reactNativePath: config.reactNativePath,
-    },
+export async function start(
+  _: string[],
+  cliConfig: CliConfig,
+  args: StartArguments
+) {
+  const { sendEvents: sendEventsArg } = args;
+  const detectedPlatforms = Object.keys(cliConfig.platforms);
+
+  if (args.platform && !detectedPlatforms.includes(args.platform)) {
+    throw new CLIError(`Unrecognized platform: ${args.platform}`);
+  }
+
+  const configs = await makeCompilerConfig<Configuration>({
+    args: args,
+    bundler: 'webpack',
     command: 'start',
-    arguments: { start: { ...restArgs } },
-  };
+    rootDir: cliConfig.root,
+    platforms: args.platform ? [args.platform] : detectedPlatforms,
+    reactNativePath: cliConfig.reactNativePath,
+  });
 
-  if (args.platform && !cliOptions.config.platforms.includes(args.platform)) {
-    throw new Error('Unrecognized platform: ' + args.platform);
-  }
+  // expose selected args as environment variables
+  setupEnvironment(args);
 
-  if (args.verbose) {
-    process.env[VERBOSE_ENV_KEY] = '1';
-  }
+  const devServerOptions = configs[0].devServer ?? {};
+  const showHttpRequests = args.verbose || args.logRequests;
 
   const reporter = composeReporters(
     [
@@ -68,30 +67,21 @@ export async function start(_: string[], config: Config, args: StartArguments) {
     ].filter(Boolean) as Reporter[]
   );
 
-  const version = packageJson.version;
-  process.stdout.write(
-    colorette.bold(colorette.cyan('📦 Re.Pack ' + version + '\n\n'))
+  process.stdout.write(logo(packageJson.version, 'webpack'));
+
+  const compiler = new Compiler(
+    args,
+    reporter,
+    cliConfig.root,
+    cliConfig.reactNativePath
   );
 
-  const compiler = new Compiler(cliOptions, reporter);
-
-  const serverHost = args.host || "0.0.0.0";
-  const serverPort = args.port ?? DEFAULT_PORT;
-  const serverURL = `${args.https === true ? 'https' : 'http'}://${serverHost}:${serverPort}`;
-  const showHttpRequests = args.verbose || args.logRequests;
-
+  // const serverHost = args.host || "0.0.0.0";
   const { createServer } = await import('@callstack/repack-dev-server');
   const { start, stop } = await createServer({
     options: {
-      rootDir: cliOptions.config.root,
-      host: serverHost,
-      port: serverPort,
-      https: args.https
-        ? {
-            cert: args.cert,
-            key: args.key,
-          }
-        : undefined,
+      ...devServerOptions,
+      rootDir: cliConfig.root,
       logRequests: showHttpRequests,
     },
     delegate: (ctx): Server.Delegate => {
@@ -105,8 +95,17 @@ export async function start(_: string[], config: Config, args: StartArguments) {
               ctx.broadcastToMessageClients({ method: 'devMenu' });
             },
             onOpenDevTools() {
-              void fetch(`${serverURL}/open-debugger`, {
+              fetch(`${ctx.options.url}/open-debugger`, {
                 method: 'POST',
+              }).catch(() => {
+                ctx.log.warn('Failed to open React Native DevTools');
+              });
+            },
+            onAdbReverse() {
+              void runAdbReverse({
+                port: ctx.options.port,
+                logger: ctx.log,
+                verbose: true,
               });
             },
           },
@@ -114,24 +113,36 @@ export async function start(_: string[], config: Config, args: StartArguments) {
         );
       }
 
-      if (reversePort && args.port) {
-        void runAdbReverse(args.port, ctx.log);
+      if (args.reversePort) {
+        void runAdbReverse({
+          logger: ctx.log,
+          port: ctx.options.port,
+          wait: true,
+        });
       }
-
-      const lastStats: Record<string, webpack.StatsCompilation> = {};
 
       compiler.on('watchRun', ({ platform }) => {
         console.log('[CompilerPlugin] hook: watchRun');
         ctx.notifyBuildStart(platform);
+        ctx.broadcastToHmrClients<HMRMessage>({
+          action: 'compiling',
+          body: { name: platform },
+        });
         if (platform === 'android') {
-          void runAdbReverse(args.port ?? DEFAULT_PORT, ctx.log);
+          void runAdbReverse({
+            port: ctx.options.port,
+            logger: ctx.log,
+          });
         }
       });
 
       compiler.on('invalid', ({ platform }) => {
         console.log('[CompilerPlugin] hook: invalid');
         ctx.notifyBuildStart(platform);
-        ctx.broadcastToHmrClients({ action: 'building' }, platform);
+        ctx.broadcastToHmrClients<HMRMessage>({
+          action: 'compiling',
+          body: { name: platform },
+        });
       });
 
       compiler.on(
@@ -141,15 +152,18 @@ export async function start(_: string[], config: Config, args: StartArguments) {
           stats,
         }: {
           platform: string;
-          stats: webpack.StatsCompilation;
+          stats: StatsCompilation;
         }) => {
           console.log('[CompilerPlugin] hook: done');
           ctx.notifyBuildEnd(platform);
-          lastStats[platform] = stats;
-          ctx.broadcastToHmrClients(
-            { action: 'built', body: createHmrBody(stats) },
-            platform
-          );
+          ctx.broadcastToHmrClients<HMRMessage>({
+            action: 'hash',
+            body: { name: platform, hash: stats.hash },
+          });
+          ctx.broadcastToHmrClients<HMRMessage>({
+            action: 'ok',
+            body: { name: platform },
+          });
         }
       );
 
@@ -181,16 +195,6 @@ export async function start(_: string[], config: Config, args: StartArguments) {
           shouldIncludeFrame: (frame) => {
             // If the frame points to internal bootstrap/module system logic, skip the code frame.
             return !/webpack[/\\]runtime[/\\].+\s/.test(frame.file);
-          },
-        },
-        hmr: {
-          getUriPath: () => '/__hmr',
-          onClientConnected: (platform, clientId) => {
-            ctx.broadcastToHmrClients(
-              { action: 'sync', body: createHmrBody(lastStats[platform]) },
-              platform,
-              [clientId]
-            );
           },
         },
         messages: {
@@ -234,21 +238,5 @@ export async function start(_: string[], config: Config, args: StartArguments) {
       sendEventsStop();
       await stop();
     },
-  };
-}
-
-function createHmrBody(
-  stats?: webpack.StatsCompilation
-): HMRMessageBody | null {
-  if (!stats) {
-    return null;
-  }
-
-  return {
-    name: stats.name ?? '',
-    time: stats.time ?? 0,
-    hash: stats.hash ?? '',
-    warnings: stats.warnings || [],
-    errors: stats.errors || [],
   };
 }

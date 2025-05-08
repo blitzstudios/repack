@@ -1,0 +1,10 @@
+{
+  "rspack": {
+    "@rspack/core": "^1.2.8",
+    "@swc/helpers": "^0.5.15"
+  },
+  "webpack": {
+    "terser-webpack-plugin": "^5.3.14",
+    "webpack": "^5.98.0"
+  }
+}

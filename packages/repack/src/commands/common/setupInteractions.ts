@@ -1,6 +1,6 @@
 import nodeReadline from 'node:readline';
 import * as colorette from 'colorette';
-import type { Logger } from '../../types';
+import type { Logger } from '../../types.js';
 
 type Interaction = {
   // The function to be executed when this interaction's keystroke is sent.
@@ -21,6 +21,7 @@ export function setupInteractions(
     onReload?: () => void;
     onOpenDevMenu?: () => void;
     onOpenDevTools?: () => void;
+    onAdbReverse?: () => void;
   },
   options?: {
     logger?: Logger;
@@ -91,6 +92,11 @@ export function setupInteractions(
       action: handlers.onOpenDevTools,
       postPerformMessage: 'Opening debugger',
       helpName: 'Open debugger',
+    },
+    a: {
+      action: handlers.onAdbReverse,
+      postPerformMessage: 'Running adb reverse',
+      helpName: 'Run adb reverse',
     },
   };
 

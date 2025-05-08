@@ -1,0 +1,280 @@
+import { PackageManagerTabs } from "@theme";
+
+# Migrating from Re.Pack 4
+
+:::info title="Re.Pack 5 now supports Rspack!"
+Re.Pack 5 introduces support for [Rspack](https://rspack.dev/),
+a high-performance webpack alternative with a highly compatible API.
+This migration guide focuses solely on migrating from **V4** to **V5** while continuing to use webpack.
+
+If you're interested in using Rspack (which is encouraged), we recommend first completing the migration
+to **V5** with webpack and then following our separate [webpack to Rspack migration guide](/docs/migration-guides/rspack).
+:::
+
+:::danger title="Changes to internal plugins are not covered"
+Plugins that are part of `RepackPlugin` are considered internal and are not covered by this migration guide.
+:::
+
+## Update dependencies in `package.json`
+
+The first step is to update the Re.Pack in the `devDependencies` section of your `package.json`:
+
+```diff
+{
+  "devDependencies": {
+-    "@callstack/repack": "4.x.x"
++    "@callstack/repack": "~5.0.0"
+  }
+}
+```
+
+You can also remove `babel-loader` from your `devDependencies` as Re.Pack 5 now includes it by default:
+
+```diff
+{
+  "devDependencies": {
+-    "babel-loader": "^9.1.3"
+  }
+}
+```
+
+:::tip title="Good time to update webpack and terser-webpack-plugin"
+
+While not necessary, for the best experience with Re.Pack 5,
+we recommend updating your `webpack` and `terser-webpack-plugin` dependencies to their latest versions:
+
+```json
+{
+  "devDependencies": {
+    "webpack": "^5.98.0",
+    "terser-webpack-plugin": "^5.3.11"
+  }
+}
+```
+
+:::
+
+After updating the project dependencies, run the install command of your package manager:
+
+<PackageManagerTabs command="install" />
+
+## Update `react-native.config.js`
+
+Since Re.Pack 5 now supports multiple bundlers (webpack and Rspack),
+you need to specify that you want to use webpack commands explicitly.
+Update your `react-native.config.js` in a following way:
+
+```diff
+module.exports = {
+-  commands: require('@callstack/repack/commands'),
++  commands: require('@callstack/repack/commands/webpack'),
+};
+```
+
+## Update webpack configuration
+
+Below are the changes that you need to be aware of when migrating to Re.Pack 5. Most of the changes revolve around reducing the amount of configuration needed.
+
+:::info title="Re.Pack 5 makes webpack configuration much smaller"
+In **V5** we've significantly simplified webpack configuration templates.
+Many defaults are now configured out of the box, reducing the need for explicit
+configuration and making your configuration files much cleaner and easier to maintain.
+
+For a comprehensive guide on configuring webpack using Re.Pack 5, including all available
+options, defaults, and configuration variants, please refer to our
+[Configuration guide](/docs/guides/configuration).
+:::
+
+### Breaking: New configuration cascade system
+
+A strict configuration cascade system was introduced to provide clear and predictable configuration resolution:
+
+1. CLI flags (highest precedence)
+2. Config values
+3. Command defaults
+4. Re.Pack defaults
+5. Webpack/Rspack defaults (lowest precedence)
+
+:::warning title="CLI arguments now bypass config files!"
+CLI arguments now always take the highest precedence and cannot be overridden by config files. This change aligns Re.Pack behavior with other similar CLI tools. Make sure to update your configuration with this in mind. 
+:::
+
+For more details about the configuration system and available options and their defaults, see our [Configuration guide](/docs/guides/configuration#configuration-precedence).
+
+### Breaking: `devtool` option is now used to configure sourcemaps
+
+We've changed how sourcemaps are configured to align better with webpack's native configuration. The `devtool` option is now used to control the behavior of generated sourcemaps, replacing the previous `RepackPlugin` configuration. Please make sure to remove any `devtool: false` from your configuration to keep sourcemaps enabled.
+
+```diff
+-  devtool: false,
+-  plugins: [
+-    new RepackPlugin({
+-      sourceMaps: true,
+-    }),
+-  ],
++  // Use webpack's native devtool option to configure sourcemaps
++  devtool: 'source-map',
+```
+
+:::tip title="You can remove the devtool option altogether"
+`devtool: 'source-map'` is now the default value in **V5**.
+:::
+
+The sourcemap handling is now managed by a dedicated internal `SourceMapPlugin` that's included in the `RepackPlugin` by default - you don't need to add it separately.
+
+### Breaking: `getInitializationEntries` was removed
+
+The `getInitializationEntries` helper function was removed as initialization entries are now configured automatically. 
+
+You can now simplify your entry configuration:
+
+```diff
+-  entry: [
+-    ...Repack.getInitializationEntries(reactNativePath, {
+-      hmr: devServer && devServer.hmr,
+-    }),
+-    entry,
+-  ],
++  entry: './index.js', // or just entry if you're using env.entry
+```
+### Breaking: react-refresh transformation is now handled by `reactRefreshLoader`
+
+We've changed how the React Refresh transformation is handled to make it compatible with both Rspack and webpack. The transformation now relies on `@rspack/plugin-react-refresh` which is shipped with Re.Pack and is configured automatically in the `RepackPlugin`.
+
+You can simplify your `babel-loader` rule by removing the `react-refresh/babel` plugin from options:
+
+```diff
+{
+  test: /\.[jt]sx?$/,
+  exclude: /node_modules/,
+-  use: {
+-    loader: 'babel-loader',
+-    options: {
+-      plugins:
+-        devServer && devServer.hmr
+-          ? ['module:react-refresh/babel']
+-          : undefined,
+-    },
+-  },
++  use: 'babel-loader'
+}
+```
+
+### Breaking: Simplified RepackPlugin configuration
+
+We've significantly reduced the required `RepackPlugin` configuration. Several options have been removed as they were redundant, and others have become optional as they can be inferred from your webpack configuration.
+
+The following options have been **removed**:
+
+```diff
+plugins: [
+  new RepackPlugin({
+-    context,      
+-    mode,         
+-    sourceMaps,   
+-    entryName,    
+-    devServer,   
+     output: {
+-      bundleFilename,
+-      sourceMapFilename,
+-      assetsPath, 
+     } 
+  }),
+]
+```
+
+The following options are now **optional**:
+
+```diff
+plugins: [
+  new RepackPlugin({
+-    platform,
+-    output: {},
+  }),
+]
+```
+
+:::tip Minimal configuration
+The plugin configuration object is now entirely optional. In most cases, you can use the minimal setup:
+```js
+plugins: [new Repack.RepackPlugin()]
+```
+
+For available options and their defaults, see the [RepackPlugin API documentation](/api/plugins/repack).
+:::
+
+### Breaking: Output configuration moved to CLI flags
+
+Since output-related configuration options have been removed from `RepackPlugin`, the following properties: `bundleFilename`, `sourceMapFilename`, `assetsPath` are now controlled exclusively through their respective CLI flags - [see bundle command documentation](/api/cli/bundle). 
+
+### Breaking: Simplified `assets-loader` configuration 
+
+The `assets-loader` configuration has been simplified:
+1. `devServerEnabled` was removed, it's now inferred automatically from configuration
+2. `platform` was made optional and by default is inferred from configuration
+3. `scalableAssetExtensions` is now optional and defaults to `Repack.SCALABLE_ASSETS`
+
+You can now simplify your assets loader configuration:
+
+```diff
+{
+  test: Repack.getAssetExtensionsRegExp(Repack.ASSET_EXTENSIONS),
+  use: {
+    loader: '@callstack/repack/assets-loader',
+-    options: {
+-      platform,
+-      devServerEnabled: Boolean(devServer),
+-      scalableAssetExtensions: Repack.SCALABLE_ASSETS,
+-    },
+  },
+}
+```
+
+### Breaking: `JavaScriptLooseModePlugin` was removed
+
+The `JavascriptLooseMode` plugin has been removed as it was no longer relevant. `@react-native/babel-preset` is now the exclusive handler for loose mode configuration.
+
+### `getPublicPath` utility function is now deprecated
+
+The `getPublicPath` utility function has been deprecated and now acts as a functional no-op. The default values are now configured out of the box, removing need for this utility. You can safely remove any usage of this utility:
+
+```diff
+output: {
+-    publicPath: Repack.getPublicPath({platform, devServer}),
+},
+```
+
+## Other notable changes
+
+### React Native DevTools is now the only supported debugger
+
+Legacy remote debugging support has been removed in favor of the new React Native DevTools, which is now enabled by default. The new debugger provides a better debugging experience specifically tailored for React Native applications and will be the only supported debugger going forward.
+
+### Removed `--silent` flag from start command
+
+The `--silent` CLI flag has been removed from the start command. To silence the output, you can use shell redirection instead:
+
+```bash
+# Unix/macOS
+npx react-native start > /dev/null 2>&1
+
+# Windows
+npx react-native start > nul 2>&1
+```
+
+### Changed `--reverse-port` to `--no-reverse-port` in start command
+
+The `--reverse-port` CLI option has been replaced with `--no-reverse-port`. This change makes it clearer that port reversing is enabled by default and the flag is used to disable it.
+
+### Deprecated `--webpackConfig` in favor of `--config`
+
+The `--webpackConfig` CLI option has been deprecated in favor of the new `--config` option. This change aligns the option name with other bundler configurations. While `--webpackConfig` will continue to work for now, we recommend updating your scripts to use `--config` instead:
+
+```diff
+- react-native webpack-bundle --webpackConfig webpack.config.js
++ react-native webpack-bundle --config webpack.config.js
+```
+
+
+
+

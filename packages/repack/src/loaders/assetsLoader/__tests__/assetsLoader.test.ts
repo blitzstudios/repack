@@ -4,7 +4,10 @@ import vm from 'node:vm';
 import { rspack } from '@rspack/core';
 import memfs from 'memfs';
 import { RspackVirtualModulePlugin } from 'rspack-plugin-virtual-module';
-import { getAssetExtensionsRegExp, getResolveOptions } from '../../../utils';
+import {
+  getAssetExtensionsRegExp,
+  getResolveOptions,
+} from '../../../utils/index.js';
 
 function loadFixtures(...filenames: string[]) {
   return filenames
@@ -65,6 +68,8 @@ async function compileBundle(
     },
     plugins: [
       new RspackVirtualModulePlugin({
+        'package.json': '{ "type": "module" }',
+        'node_modules/react-native/package.json': '{ "name": "react-native" }',
         'node_modules/react-native/Libraries/Image/AssetRegistry.js':
           'module.exports = { registerAsset: (spec) => spec };',
         'node_modules/react-native/Libraries/Utilities/PixelRatio.js':
@@ -126,36 +131,9 @@ describe('assetLoader', () => {
     'star@3x.png'
   );
 
-  describe('on ios', () => {
+  describe.each(['ios', 'android'])('on %s', (platform) => {
     it('should load and extract asset without scales', async () => {
-      const { code, volume } = await compileBundle('ios', {
-        ...fixtures,
-        './index.js': "export { default } from './__fixtures__/logo.png';",
-      });
-      const context: { Export?: { default: Record<string, any> } } = {};
-      vm.runInNewContext(code, context);
-
-      expect(context.Export?.default).toMatchSnapshot();
-      expect(volume.toTree()).toMatchSnapshot();
-    });
-
-    it('should load and extract asset with scales', async () => {
-      const { code, volume } = await compileBundle('ios', {
-        ...fixtures,
-        './index.js': "export { default } from './__fixtures__/star.png';",
-      });
-
-      const context: { Export?: { default: Record<string, any> } } = {};
-      vm.runInNewContext(code, context);
-
-      expect(context.Export?.default).toMatchSnapshot();
-      expect(volume.toTree()).toMatchSnapshot();
-    });
-  });
-
-  describe('on android', () => {
-    it('should load and extract asset without scales', async () => {
-      const { code, volume } = await compileBundle('android', {
+      const { code, volume } = await compileBundle(platform, {
         ...fixtures,
         './index.js': "export { default } from './__fixtures__/logo.png';",
       });
@@ -168,9 +146,23 @@ describe('assetLoader', () => {
     });
 
     it('should load and extract asset with scales', async () => {
-      const { code, volume } = await compileBundle('android', {
+      const { code, volume } = await compileBundle(platform, {
         ...fixtures,
         './index.js': "export { default } from './__fixtures__/star.png';",
+      });
+
+      const context: { Export?: { default: Record<string, any> } } = {};
+      vm.runInNewContext(code, context);
+
+      expect(context.Export?.default).toMatchSnapshot();
+      expect(volume.toTree()).toMatchSnapshot();
+    });
+
+    it('should prefer platform specific asset', async () => {
+      const platformFixtures = loadFixtures('logo.png', `logo.${platform}.png`);
+      const { code, volume } = await compileBundle(platform, {
+        ...platformFixtures,
+        './index.js': "export { default } from './__fixtures__/logo.png';",
       });
 
       const context: { Export?: { default: Record<string, any> } } = {};

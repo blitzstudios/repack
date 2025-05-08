@@ -1,13 +1,13 @@
 import type fs from 'node:fs';
 import path from 'node:path';
 import util from 'node:util';
-import { SCALABLE_ASSETS, SCALABLE_RESOLUTIONS } from '../../utils';
-import { convertToRemoteAssets } from './convertToRemoteAssets';
-import { extractAssets } from './extractAssets';
-import { inlineAssets } from './inlineAssets';
-import { type AssetLoaderContext, getOptions } from './options';
-import type { Asset } from './types';
-import { collectScales, getAssetDimensions, getScaleNumber } from './utils';
+import { SCALABLE_ASSETS, SCALABLE_RESOLUTIONS } from '../../utils/index.js';
+import { convertToRemoteAssets } from './convertToRemoteAssets.js';
+import { extractAssets } from './extractAssets.js';
+import { inlineAssets } from './inlineAssets.js';
+import { type AssetLoaderContext, getOptions } from './options.js';
+import type { Asset } from './types.js';
+import { collectScales, getAssetDimensions, getScaleNumber } from './utils.js';
 
 type AsyncFS = (typeof fs)['promises'];
 
@@ -25,6 +25,10 @@ export default async function repackAssetsLoader(
   this.cacheable();
   const callback = this.async();
   const logger = this.getLogger('repackAssetsLoader');
+  const options = getOptions(this);
+
+  const isDev = !!this._compiler.options.devServer;
+  const platform = options.platform ?? (this._compiler.options.name as string);
 
   const readDirAsync: AsyncFS['readdir'] = util.promisify(this.fs.readdir);
   const readFileAsync: AsyncFS['readFile'] = util.promisify(this.fs.readFile);
@@ -32,8 +36,6 @@ export default async function repackAssetsLoader(
   logger.debug(`Processing asset ${this.resourcePath}`);
 
   try {
-    const options = getOptions(this);
-
     // defaults
     const scalableAssetExtensions =
       options.scalableAssetExtensions ?? SCALABLE_ASSETS;
@@ -57,7 +59,7 @@ export default async function repackAssetsLoader(
       .relative(this.rootContext, resourceAbsoluteDirname)
       .replace(new RegExp(`^[\\.\\${path.sep}]+`), '');
     const resourceExtensionType = path.extname(resourcePath).replace(/^\./, '');
-    const suffixPattern = `(@\\d+(\\.\\d+)?x)?(\\.(${options.platform}|native))?\\.${resourceExtensionType}$`;
+    const suffixPattern = `(@\\d+(\\.\\d+)?x)?(\\.(${platform}|native))?\\.${resourceExtensionType}$`;
     const resourceFilename = path
       .basename(resourcePath)
       .replace(new RegExp(suffixPattern), '');
@@ -81,6 +83,7 @@ export default async function repackAssetsLoader(
       resourceExtensionType,
       scalableAssetExtensions,
       scalableAssetResolutions,
+      platform,
       readDirAsync
     );
 
@@ -113,20 +116,17 @@ export default async function repackAssetsLoader(
         }
       : null;
 
+    // assets are sorted by scale, in ascending order
     const assets = await Promise.all<Asset>(
       scaleKeys.map(async (scaleKey) => {
         const assetPath = scales[scaleKey];
-        const isDefault = assetPath === resourcePath;
+        const isLoaded = assetPath === resourcePath;
         // use raw Buffer passed to loader to avoid unnecessary read
-        const content = isDefault ? assetData : await readFileAsync(assetPath);
+        const content = isLoaded ? assetData : await readFileAsync(assetPath);
 
         let destination: string;
 
-        if (
-          !options.devServerEnabled &&
-          !options.remote?.enabled &&
-          options.platform === 'android'
-        ) {
+        if (!isDev && !options.remote?.enabled && platform === 'android') {
           // found font family
           if (
             testXml.test(resourceNormalizedFilename) &&
@@ -197,7 +197,6 @@ export default async function repackAssetsLoader(
 
         return {
           data: content,
-          default: isDefault,
           dimensions,
           filename: destination,
           scale,
@@ -208,7 +207,7 @@ export default async function repackAssetsLoader(
     logger.debug(
       `Resolved request ${this.resourcePath}`,
       JSON.stringify({
-        platform: options.platform,
+        platform,
         rootContext: this.rootContext,
         resourceNormalizedFilename,
         resourceFilename,
@@ -260,7 +259,7 @@ export default async function repackAssetsLoader(
             assetsDirname,
             pathSeparatorRegexp,
             publicPath: options.publicPath,
-            devServerEnabled: options.devServerEnabled,
+            isDev,
           },
           logger
         );

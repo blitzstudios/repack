@@ -1,6 +1,13 @@
 import type { moduleFederationPlugin as MF } from '@module-federation/sdk';
 import type { Compiler, RspackPluginInstance } from '@rspack/core';
-import { isRspackCompiler } from './utils/isRspackCompiler';
+import { name as isIdentifier } from 'estree-util-is-identifier-name';
+import { isRspackCompiler } from './utils/isRspackCompiler.js';
+
+type JsModuleDescriptor = {
+  identifier: string;
+  name: string;
+  id?: string;
+};
 
 /**
  * {@link ModuleFederationPlugin} configuration options.
@@ -11,6 +18,15 @@ import { isRspackCompiler } from './utils/isRspackCompiler';
  */
 export interface ModuleFederationPluginV2Config
   extends MF.ModuleFederationPluginOptions {
+  /**
+   *  List of default runtime plugins for Federation Runtime.
+   *  Useful if you want to modify or disable behaviour of runtime plugins.
+   *
+   *  Defaults to an array containing:
+   *    - '@callstack/repack/mf/core-plugin
+   *    - '@callstack/repack/mf/resolver-plugin
+   */
+  defaultRuntimePlugins?: string[];
   /** Enable or disable adding React Native deep imports to shared dependencies. Defaults to true */
   reactNativeDeepImports?: boolean;
 }
@@ -38,7 +54,7 @@ export interface ModuleFederationPluginV2Config
  * import * as Repack from '@callstack/repack';
  *
  * new Repack.plugins.ModuleFederationPlugin({
- *   name: 'host,
+ *   name: 'host',
  * });
  * ```
  *
@@ -47,7 +63,7 @@ export interface ModuleFederationPluginV2Config
  * import * as Repack from '@callstack/repack';
  *
  * new Repack.plugins.ModuleFederationPlugin({
- *   name: 'host,
+ *   name: 'host',
  *   shared: {
  *     react: Repack.Federated.SHARED_REACT,
  *     'react-native': Repack.Federated.SHARED_REACT,
@@ -81,13 +97,32 @@ export interface ModuleFederationPluginV2Config
  * @category Webpack Plugin
  */
 export class ModuleFederationPluginV2 implements RspackPluginInstance {
-  private config: MF.ModuleFederationPluginOptions;
+  public config: MF.ModuleFederationPluginOptions;
   private deepImports: boolean;
+  private defaultRuntimePlugins: string[];
 
   constructor(pluginConfig: ModuleFederationPluginV2Config) {
-    const { reactNativeDeepImports, ...config } = pluginConfig;
+    const { defaultRuntimePlugins, reactNativeDeepImports, ...config } =
+      pluginConfig;
     this.config = config;
     this.deepImports = reactNativeDeepImports ?? true;
+    this.defaultRuntimePlugins = defaultRuntimePlugins ?? [
+      '@callstack/repack/mf/core-plugin',
+      '@callstack/repack/mf/resolver-plugin',
+    ];
+  }
+
+  private validateModuleFederationContainerName(name: string | undefined) {
+    if (!name) return;
+    if (!isIdentifier(name)) {
+      const error = new Error(
+        `[RepackModuleFederationPlugin] The container's name: '${name}' must be a valid JavaScript identifier. ` +
+          'Please correct it to proceed. For more information, see: https://developer.mozilla.org/en-US/docs/Glossary/Identifier'
+      );
+      // remove the stack trace to make the error more readable
+      error.stack = undefined;
+      throw error;
+    }
   }
 
   private ensureModuleFederationPackageInstalled(context: string) {
@@ -95,7 +130,7 @@ export class ModuleFederationPluginV2 implements RspackPluginInstance {
       require.resolve('@module-federation/enhanced', { paths: [context] });
     } catch {
       throw new Error(
-        "ModuleFederationPlugin requires '@module-federation/enhanced' to be present in your project. " +
+        "[RepackModuleFederationPlugin] Dependency '@module-federation/enhanced' is required, but not found in your project. " +
           'Did you forget to install it?'
       );
     }
@@ -105,10 +140,6 @@ export class ModuleFederationPluginV2 implements RspackPluginInstance {
     context: string,
     runtimePlugins: string[] | undefined = []
   ) {
-    const repackRuntimePlugin = require.resolve(
-      '../modules/FederationRuntimePlugin'
-    );
-
     const plugins = runtimePlugins
       .map((pluginPath) => {
         try {
@@ -121,11 +152,14 @@ export class ModuleFederationPluginV2 implements RspackPluginInstance {
       })
       .filter((pluginPath) => !!pluginPath) as string[];
 
-    if (!plugins.includes(repackRuntimePlugin)) {
-      return [repackRuntimePlugin, ...runtimePlugins];
+    for (const plugin of this.defaultRuntimePlugins) {
+      const pluginPath = require.resolve(plugin);
+      if (!plugins.includes(pluginPath)) {
+        plugins.unshift(pluginPath);
+      }
     }
 
-    return runtimePlugins;
+    return plugins;
   }
 
   private getModuleFederationPlugin(compiler: Compiler) {
@@ -219,25 +253,45 @@ export class ModuleFederationPluginV2 implements RspackPluginInstance {
     return adjustedSharedDependencies;
   }
 
-  apply(compiler: Compiler) {
-    this.ensureModuleFederationPackageInstalled(compiler.context);
-
+  private setupIgnoredWarnings(compiler: Compiler) {
     // MF2 produces warning about not supporting async await
     // we can silence this warning since it works just fine
     compiler.options.ignoreWarnings = compiler.options.ignoreWarnings ?? [];
     compiler.options.ignoreWarnings.push(
       (warning) => warning.name === 'EnvironmentNotSupportAsyncWarning'
     );
+    // MF2 produces warning about dynamic import in loadEsmEntry but it's not relevant
+    // in RN env since we override the loadEntry logic through a hook
+    // https://github.com/module-federation/core/blob/fa7a0bd20eb64eccd6648fea340c6078a2268e39/packages/runtime/src/utils/load.ts#L28-L37
+    compiler.options.ignoreWarnings.push((warning) => {
+      if ('moduleDescriptor' in warning) {
+        const moduleDescriptor = warning.moduleDescriptor as JsModuleDescriptor;
+
+        // warning can come from either runtime or runtime-core (in newer versions of MF2)
+        const isMF2Runtime = moduleDescriptor.name.endsWith(
+          '@module-federation/runtime/dist/index.cjs.js'
+        );
+        const isMF2RuntimeCore = moduleDescriptor.name.endsWith(
+          '@module-federation/runtime-core/dist/index.cjs.js'
+        );
+
+        if (isMF2Runtime || isMF2RuntimeCore) {
+          const requestExpressionWarning =
+            /Critical dependency: the request of a dependency is an expression/;
+          return requestExpressionWarning.test(warning.message);
+        }
+      }
+
+      return false;
+    });
+  }
+
+  apply(compiler: Compiler) {
+    this.validateModuleFederationContainerName(this.config.name);
+    this.ensureModuleFederationPackageInstalled(compiler.context);
+    this.setupIgnoredWarnings(compiler);
 
     const ModuleFederationPlugin = this.getModuleFederationPlugin(compiler);
-
-    const libraryConfig = this.config.exposes
-      ? {
-          name: this.config.name,
-          type: 'self',
-          ...this.config.library,
-        }
-      : undefined;
 
     const sharedConfig = this.adaptSharedDependencies(
       this.config.shared ?? this.getDefaultSharedDependencies()
@@ -250,9 +304,23 @@ export class ModuleFederationPluginV2 implements RspackPluginInstance {
       this.config.runtimePlugins
     );
 
+    // By setting FEDERATION_ALLOW_NEW_FUNCTION to true, we prevent injecting
+    // dynamic import (marked with webpackIgnore magic comment) into the bundle.
+    // This is problematic when we run the Hermes compiler inside of `HermesBytecodePlugin`
+    // because Hermes doesn't understand dynamic import syntax and throws an error.
+    // Note that `loadEsmEntry` which this workaround affects is not even used in RN
+    // since we provide our own `loadEntry` implementation through a CorePlugin.
+    // https://github.com/module-federation/core/blob/cbd5b7eed1fd13d7256f19664bbe6394d6ad5233/packages/runtime-core/src/utils/load.ts#L29-L38
+    new compiler.webpack.DefinePlugin({
+      FEDERATION_ALLOW_NEW_FUNCTION: true,
+    }).apply(compiler);
+
+    // NOTE: we keep the default library config since it's the most compatible
+    // Default library config uses 'externalType': 'script' and 'type': 'var'
+    // var works identical to 'self' since declaring var in a global scope is
+    // equal to assigning to the globalObject (normalized by Re.Pack to 'self')
     const config: MF.ModuleFederationPluginOptions = {
       ...this.config,
-      library: libraryConfig,
       shared: sharedConfig,
       shareStrategy: shareStrategyConfig,
       runtimePlugins: runtimePluginsConfig,

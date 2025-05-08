@@ -1,9 +1,20 @@
 packages:
-  - "packages/dev-server"
-  - "packages/init"
-  - "packages/repack"
-  - "apps/tester-app"
-  - "apps/tester-federation"
-  - "apps/tester-federation-v2"
-  - "tests/metro-compat"
+  - "packages/*"
+  - "apps/*"
+  - "tests/*"
   - "website"
+
+catalog:
+  "@rspack/core": ^1.2.7
+  "@rslib/core": ^0.5.3
+  "@swc/helpers": ~0.5.15
+  "@types/node": ^18
+  "terser-webpack-plugin": ^5.3.11
+  "typescript": ^5.7.2
+  "webpack": ^5.98.0
+  "react": "19.0.0"
+  "react-native": "0.78.0"
+
+catalogs:
+  testers:
+    "react-native-test-app": 4.2.2

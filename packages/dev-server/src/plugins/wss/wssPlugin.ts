@@ -1,13 +1,14 @@
 import type { FastifyInstance } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
-import type { Server } from '../../types';
-import { WebSocketRouter } from './WebSocketRouter';
-import { WebSocketServerAdapter } from './WebSocketServerAdapter';
-import { WebSocketApiServer } from './servers/WebSocketApiServer';
-import { WebSocketDevClientServer } from './servers/WebSocketDevClientServer';
-import { WebSocketEventsServer } from './servers/WebSocketEventsServer';
-import { WebSocketHMRServer } from './servers/WebSocketHMRServer';
-import { WebSocketMessageServer } from './servers/WebSocketMessageServer';
+import type { WebSocketServer } from 'ws';
+import type { Server } from '../../types.js';
+import { WebSocketRouter } from './WebSocketRouter.js';
+import { WebSocketServerAdapter } from './WebSocketServerAdapter.js';
+import { WebSocketApiServer } from './servers/WebSocketApiServer.js';
+import { WebSocketDevClientServer } from './servers/WebSocketDevClientServer.js';
+import { WebSocketEventsServer } from './servers/WebSocketEventsServer.js';
+import { WebSocketHMRServer } from './servers/WebSocketHMRServer.js';
+import { WebSocketMessageServer } from './servers/WebSocketMessageServer.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -24,6 +25,12 @@ declare module 'fastify' {
   }
 }
 
+declare module 'ws' {
+  interface WebSocket {
+    isAlive?: boolean;
+  }
+}
+
 /**
  * Defined in @react-native/dev-middleware
  * Reference: https://github.com/facebook/react-native/blob/main/packages/dev-middleware/src/inspector-proxy/InspectorProxy.js
@@ -34,11 +41,10 @@ const WS_DEBUGGER_URL = '/inspector/debug';
 async function wssPlugin(
   instance: FastifyInstance,
   {
-    options,
-    delegate,
+    endpoints,
   }: {
-    options: Server.Options;
     delegate: Server.Delegate;
+    endpoints?: Record<string, WebSocketServer>;
   }
 ) {
   const router = new WebSocketRouter(instance);
@@ -49,19 +55,19 @@ async function wssPlugin(
     webSocketMessageServer: messageServer,
   });
   const apiServer = new WebSocketApiServer(instance);
-  const hmrServer = new WebSocketHMRServer(instance, delegate.hmr);
+  const hmrServer = new WebSocketHMRServer(instance);
 
   // @react-native/dev-middleware servers
   const deviceConnectionServer = new WebSocketServerAdapter(
     instance,
     WS_DEVICE_URL,
-    options.endpoints?.[WS_DEVICE_URL]
+    endpoints?.[WS_DEVICE_URL]
   );
 
   const debuggerConnectionServer = new WebSocketServerAdapter(
     instance,
     WS_DEBUGGER_URL,
-    options.endpoints?.[WS_DEBUGGER_URL]
+    endpoints?.[WS_DEBUGGER_URL]
   );
 
   router.registerServer(devClientServer);

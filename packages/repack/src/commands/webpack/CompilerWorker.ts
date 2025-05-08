@@ -2,26 +2,29 @@ import path from 'node:path';
 import { parentPort, workerData } from 'node:worker_threads';
 import memfs from 'memfs';
 import webpack, { type Configuration } from 'webpack';
-import { adaptFilenameToPlatform, getEnvOptions, loadConfig } from '../common';
+import { makeCompilerConfig } from '../common/config/makeCompilerConfig.js';
+import { adaptFilenameToPlatform } from '../common/index.js';
 import type {
   CompilerAsset,
   WebpackWorkerOptions,
   WorkerMessages,
-} from './types';
+} from './types.js';
 
 function postMessage(message: WorkerMessages.WorkerMessage): void {
   parentPort?.postMessage(message);
 }
 
-async function main({ cliOptions, platform }: WebpackWorkerOptions) {
-  const webpackEnvOptions = getEnvOptions(cliOptions);
-  const webpackConfig = await loadConfig<Configuration>(
-    cliOptions.config.bundlerConfigPath,
-    { ...webpackEnvOptions, platform }
-  );
-  const watchOptions = webpackConfig.watchOptions ?? {};
+async function main(opts: WebpackWorkerOptions) {
+  const [config] = await makeCompilerConfig<Configuration>({
+    args: opts.args,
+    bundler: 'webpack',
+    command: 'start',
+    rootDir: opts.rootDir,
+    platforms: [opts.platform],
+    reactNativePath: opts.reactNativePath,
+  });
 
-  webpackConfig.plugins = (webpackConfig.plugins ?? []).concat(
+  config.plugins = (config.plugins ?? []).concat(
     new webpack.ProgressPlugin({
       entries: false,
       dependencies: false,
@@ -40,7 +43,7 @@ async function main({ cliOptions, platform }: WebpackWorkerOptions) {
     })
   );
 
-  const compiler = webpack(webpackConfig);
+  const compiler = webpack(config);
 
   const fileSystem = memfs.createFsFromVolume(new memfs.Volume());
 
@@ -112,7 +115,7 @@ async function main({ cliOptions, platform }: WebpackWorkerOptions) {
     });
   });
 
-  compiler.watch(watchOptions, (error) => {
+  compiler.watch(config.watchOptions ?? {}, (error) => {
     if (error) {
       postMessage({ event: 'error', error });
     }

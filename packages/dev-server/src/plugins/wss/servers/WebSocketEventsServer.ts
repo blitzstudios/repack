@@ -1,8 +1,9 @@
+import type { IncomingMessage } from 'node:http';
 import type { FastifyInstance } from 'fastify';
 import * as prettyFormat from 'pretty-format';
 import type WebSocket from 'ws';
-import { WebSocketServer } from '../WebSocketServer';
-import type { WebSocketMessageServer } from './WebSocketMessageServer';
+import { WebSocketServer } from '../WebSocketServer.js';
+import type { WebSocketMessageServer } from './WebSocketMessageServer.js';
 
 /**
  * {@link WebSocketEventsServer} configuration options.
@@ -41,9 +42,6 @@ export interface EventMessage {
 export class WebSocketEventsServer extends WebSocketServer {
   static readonly PROTOCOL_VERSION = 2;
 
-  private clients = new Map<string, WebSocket>();
-  private nextClientId = 0;
-
   /**
    * Create new instance of WebSocketHMRServer and attach it to the given Fastify instance.
    * Any logging information, will be passed through standard `fastify.log` API.
@@ -55,10 +53,14 @@ export class WebSocketEventsServer extends WebSocketServer {
     fastify: FastifyInstance,
     private config: WebSocketEventsServerConfig
   ) {
-    super(fastify, '/events', {
-      verifyClient: (({ origin }) => {
-        return /^(https?:\/\/localhost|file:\/\/)/.test(origin);
-      }) as WebSocket.VerifyClientCallbackSync,
+    super(fastify, {
+      name: 'Events',
+      path: '/events',
+      wss: {
+        verifyClient: (({ origin }) => {
+          return /^(https?:\/\/localhost|file:\/\/)/.test(origin);
+        }) as WebSocket.VerifyClientCallbackSync,
+      },
     });
   }
 
@@ -99,7 +101,7 @@ export class WebSocketEventsServer extends WebSocketServer {
     if (message.error && message.error instanceof Error) {
       toSerialize = {
         ...message,
-        error: prettyFormat.default(message.error, {
+        error: prettyFormat.default.default(message.error, {
           escapeString: true,
           highlight: true,
           maxDepth: 3,
@@ -112,7 +114,7 @@ export class WebSocketEventsServer extends WebSocketServer {
         data: message.data.map((item: any) =>
           typeof item === 'string'
             ? item
-            : prettyFormat.default(item, {
+            : prettyFormat.default.default(item, {
                 escapeString: true,
                 highlight: true,
                 maxDepth: 3,
@@ -159,24 +161,9 @@ export class WebSocketEventsServer extends WebSocketServer {
     }
   }
 
-  /**
-   * Process new client's WebSocket connection.
-   *
-   * @param socket Incoming WebSocket connection.
-   */
-  onConnection(socket: WebSocket) {
-    const clientId = `client#${this.nextClientId++}`;
-    this.clients.set(clientId, socket);
-    this.fastify.log.debug({ msg: 'Events client connected', clientId });
+  override onConnection(socket: WebSocket, request: IncomingMessage) {
+    const clientId = super.onConnection(socket, request);
 
-    const onClose = () => {
-      this.fastify.log.debug({ msg: 'Events client disconnected', clientId });
-      socket.removeAllListeners();
-      this.clients.delete(clientId);
-    };
-
-    socket.addEventListener('error', onClose);
-    socket.addEventListener('close', onClose);
     socket.addEventListener('message', (event) => {
       const message = this.parseMessage(event.data.toString());
 
@@ -203,5 +190,7 @@ export class WebSocketEventsServer extends WebSocketServer {
         });
       }
     });
+
+    return clientId;
   }
 }

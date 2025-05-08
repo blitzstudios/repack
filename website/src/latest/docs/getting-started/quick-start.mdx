@@ -1,0 +1,69 @@
+import { PackageManagerTabs, Steps, Tabs, Tab } from 'rspress/theme';
+
+# Quick start
+
+## Pre-requisites
+
+If you're already familiar with JavaScript, React Native and webpack, then you'll be able to get moving quickly! Otherwise, it's highly recommended to get yourself familiar with these topic and then come back here:
+
+- [React Native documentation](https://reactnative.dev/)
+- [Webpack concepts](https://webpack.js.org/concepts/)
+
+## Installation
+
+To create a new React Native project with Re.Pack or adapt an existing one:
+
+<PackageManagerTabs command={{
+  npm: "npx @callstack/repack-init",
+  yarn: "yarn dlx @callstack/repack-init",
+  pnpm: "pnpm dlx @callstack/repack-init",
+  bun: "bunx @callstack/repack-init",
+}} />
+
+In case the command above didn't work for any reason, you can follow the manual migration guide [here](/docs/migration-guides/metro).
+
+:::tip title="The defaults work well for most projects"
+If you need custom settings (like additional loaders or plugins), check out our [configuration guide](/docs/guides/configuration).
+:::
+
+## Usage
+
+Now that you have Re.Pack configured, you should be able to use Re.Pack's development server and bundle your application.
+
+### Running development server
+
+When developing your application, you want to run Re.Pack's development server to compile your source code with Rspack/webpack.
+
+To start the development server, you can use React Native Community CLI and run:
+
+<PackageManagerTabs command={{
+  npm: "npm run react-native start",
+  yarn: "yarn react-native start",
+  pnpm: "pnpm react-native start",
+  bun: "bun react-native start",
+}} />
+
+To learn about `start` command, check out the [start command documentation](/api/cli/start.mdx).
+
+### Bundling the app
+
+When you are building the release version of your application, Re.Pack will be picked up automatically as the bundler. In case you want to create bundle manually, **the recommended way is to use React Native Community CLI** and run:
+
+<PackageManagerTabs command={{
+  npm: "npm run react-native bundle",
+  yarn: "yarn react-native bundle",
+  pnpm: "pnpm react-native bundle",
+  bun: "bun react-native bundle",
+}} />
+
+To learn about `bundle` command, check out the [bundle command documentation](/api/cli/bundle.mdx).
+
+:::tip title="🎉 Congratulations!"
+
+You've successfully set up Re.Pack in your project. We highly recommend to check out the following:
+
+- [Configuration Guide](/docs/guides/configuration) to learn how to configure Re.Pack to your project needs.
+- [API Reference](/api/) to learn more about Re.Pack's API.
+- [Deployment of MiniApps](/docs/guides/deploy) to learn how to deploy your federated MiniApps with Zephyr Cloud.
+
+:::

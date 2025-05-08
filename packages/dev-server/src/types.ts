@@ -1,19 +1,55 @@
+import type { ServerOptions as HttpsServerOptions } from 'node:https';
 import type { FastifyBaseLogger } from 'fastify';
-import type { WebSocketServer } from 'ws';
-import type { CompilerDelegate } from './plugins/compiler';
-import type { SymbolicatorDelegate } from './plugins/symbolicate';
-import type { HmrDelegate } from './plugins/wss';
-
-export type { CompilerDelegate } from './plugins/compiler';
-export type {
-  SymbolicatorDelegate,
-  ReactNativeStackFrame,
-  InputStackFrame,
-  StackFrame,
+import type { Options as ProxyOptions } from 'http-proxy-middleware';
+import type { CompilerDelegate } from './plugins/compiler/types.js';
+import type {
   CodeFrame,
+  InputStackFrame,
+  ReactNativeStackFrame,
+  StackFrame,
+  SymbolicatorDelegate,
   SymbolicatorResults,
-} from './plugins/symbolicate';
-export type { HmrDelegate } from './plugins/wss';
+} from './plugins/symbolicate/types.js';
+import type { NormalizedOptions } from './utils/normalizeOptions.js';
+
+export type { CompilerDelegate };
+export type {
+  CodeFrame,
+  InputStackFrame,
+  ReactNativeStackFrame,
+  StackFrame,
+  SymbolicatorDelegate,
+  SymbolicatorResults,
+};
+
+interface ProxyConfig extends ProxyOptions {
+  path?: ProxyOptions['pathFilter'];
+  context?: ProxyOptions['pathFilter'];
+}
+
+export interface DevServerOptions {
+  /**
+   * Hostname or IP address under which to run the development server.
+   * Can be 'local-ip', 'local-ipv4', 'local-ipv6' or a custom string.
+   * When left unspecified, it will listen on all available network interfaces.
+   */
+  host?: 'local-ip' | 'local-ipv4' | 'local-ipv6' | string;
+
+  /** Port under which to run the development server. */
+  port?: number;
+
+  /** Whether to enable Hot Module Replacement. */
+  hot?: boolean;
+
+  proxy?: ProxyConfig[];
+
+  /** Options for running the server as HTTPS. If `undefined`, the server will run as HTTP. */
+  server?:
+    | 'http'
+    | 'https'
+    | { type: 'http' }
+    | { type: 'https'; options?: HttpsServerOptions };
+}
 
 export namespace Server {
   /** Development server configuration. */
@@ -26,30 +62,9 @@ export namespace Server {
   }
 
   /** Development server options. */
-  export interface Options {
+  export interface Options extends DevServerOptions {
     /** Root directory of the project. */
     rootDir: string;
-
-    /** Port under which to run the development server. */
-    port: number;
-
-    /**
-     * Hostname or IP address under which to run the development server.
-     * When left unspecified, it will listen on all available network interfaces, similarly to listening on '0.0.0.0'.
-     */
-    host?: string;
-
-    /** Options for running the server as HTTPS. If `undefined`, the server will run as HTTP. */
-    https?: {
-      /** Path to certificate when running server as HTTPS. */
-      cert?: string;
-
-      /** Path to certificate key when running server as HTTPS. */
-      key?: string;
-    };
-
-    /** Additional endpoints with pre-configured servers */
-    endpoints?: Record<string, WebSocketServer>;
 
     /** Whether to enable logging requests. */
     logRequests?: boolean;
@@ -68,9 +83,6 @@ export namespace Server {
     /** A logger delegate. */
     logger: LoggerDelegate;
 
-    /** An HMR delegate. */
-    hmr: HmrDelegate;
-
     /** An messages delegate. */
     messages: MessagesDelegate;
 
@@ -84,6 +96,9 @@ export namespace Server {
    * Allows to emit logs, notify about compilation events and broadcast events to connected clients.
    */
   export interface DelegateContext {
+    /** Normalized development server options. */
+    options: NormalizedOptions;
+
     /** A logger instance, useful for emitting logs from the delegate. */
     log: FastifyBaseLogger;
 
@@ -97,15 +112,8 @@ export namespace Server {
      * Broadcast arbitrary event to all connected HMR clients for given `platform`.
      *
      * @param event Arbitrary event to broadcast.
-     * @param platform Platform of the clients to which broadcast should be sent.
-     * @param clientIds Ids of the client to which broadcast should be sent.
-     * If `undefined` the broadcast will be sent to all connected clients for the given `platform`.
      */
-    broadcastToHmrClients: <E = any>(
-      event: E,
-      platform: string,
-      clientIds?: string[]
-    ) => void;
+    broadcastToHmrClients: <E = any>(event: E) => void;
 
     /**
      * Broadcast arbitrary method-like event to all connected message clients.

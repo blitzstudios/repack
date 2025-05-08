@@ -2,17 +2,19 @@ import EventEmitter from 'node:events';
 import fs from 'node:fs';
 import path from 'node:path';
 import { Worker } from 'node:worker_threads';
+// @ts-expect-error type-only import
 import type { SendProgress } from '@callstack/repack-dev-server';
 import type webpack from 'webpack';
-import { WORKER_ENV_KEY } from '../../env';
-import type { LogType, Reporter } from '../../logging';
-import { DEV_SERVER_ASSET_TYPES } from '../consts';
-import type { CliOptions } from '../types';
+import { WORKER_ENV_KEY } from '../../env.js';
+import type { LogType, Reporter } from '../../logging/types.js';
+import { CLIError } from '../common/cliError.js';
+import { DEV_SERVER_ASSET_TYPES } from '../consts.js';
+import type { StartArguments } from '../types.js';
 import type {
   CompilerAsset,
   WebpackWorkerOptions,
   WorkerMessages,
-} from './types';
+} from './types.js';
 
 type Platform = string;
 
@@ -25,8 +27,10 @@ export class Compiler extends EventEmitter {
   isCompilationInProgress: Record<Platform, boolean> = {};
 
   constructor(
-    private cliOptions: CliOptions,
-    private reporter: Reporter
+    private args: StartArguments,
+    private reporter: Reporter,
+    private rootDir: string,
+    private reactNativePath: string
   ) {
     super();
   }
@@ -35,8 +39,10 @@ export class Compiler extends EventEmitter {
     this.isCompilationInProgress[platform] = true;
 
     const workerData: WebpackWorkerOptions = {
-      cliOptions: this.cliOptions,
       platform,
+      args: this.args,
+      rootDir: this.rootDir,
+      reactNativePath: this.reactNativePath,
     };
 
     const worker = new Worker(path.join(__dirname, './CompilerWorker.js'), {
@@ -85,12 +91,8 @@ export class Compiler extends EventEmitter {
         this.statsCache[platform] = value.stats;
 
         this.assetsCache[platform] = {
-          // keep old assets, discard HMR-related ones
-          ...Object.fromEntries(
-            Object.entries(this.assetsCache[platform] ?? {}).filter(
-              ([_, asset]) => !asset.info.hotModuleReplacement
-            )
-          ),
+          // keep old assets
+          ...(this.assetsCache[platform] ?? {}),
           // convert asset data Uint8Array to Buffer
           ...Object.fromEntries(
             Object.entries(value.assets).map(([name, { data, info, size }]) => {
@@ -211,18 +213,18 @@ export class Compiler extends EventEmitter {
   ): Promise<string | Buffer> {
     if (DEV_SERVER_ASSET_TYPES.test(filename)) {
       if (!platform) {
-        throw new Error(`Cannot detect platform for ${filename}`);
+        throw new CLIError(`Cannot detect platform for ${filename}`);
       }
       const asset = await this.getAsset(filename, platform, sendProgress);
       return asset.data;
     }
 
     try {
-      const filePath = path.join(this.cliOptions.config.root, filename);
+      const filePath = path.join(this.rootDir, filename);
       const source = await fs.promises.readFile(filePath, 'utf8');
       return source;
     } catch {
-      throw new Error(`File ${filename} not found`);
+      throw new CLIError(`File ${filename} not found`);
     }
   }
 
@@ -231,7 +233,7 @@ export class Compiler extends EventEmitter {
     platform: string | undefined
   ): Promise<string | Buffer> {
     if (!platform) {
-      throw new Error(
+      throw new CLIError(
         `Cannot determine platform for source map of ${filename}`
       );
     }
@@ -241,7 +243,7 @@ export class Compiler extends EventEmitter {
       let sourceMapFilename = info.related?.sourceMap;
 
       if (!sourceMapFilename) {
-        throw new Error(
+        throw new CLIError(
           `Cannot determine source map filename for ${filename} for ${platform}`
         );
       }
@@ -253,7 +255,9 @@ export class Compiler extends EventEmitter {
       const sourceMap = await this.getAsset(sourceMapFilename, platform);
       return sourceMap.data;
     } catch {
-      throw new Error(`Source map for ${filename} for ${platform} is missing`);
+      throw new CLIError(
+        `Source map for ${filename} for ${platform} is missing`
+      );
     }
   }
 }

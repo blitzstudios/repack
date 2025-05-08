@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
 import path from 'node:path';
 import dedent from 'dedent';
-import type { Asset } from './types';
-import { getDefaultAsset } from './utils';
+import type { Asset } from './types.js';
+import { getAssetSize } from './utils.js';
 
 export function extractAssets(
   {
@@ -14,7 +14,7 @@ export function extractAssets(
     assetsDirname,
     pathSeparatorRegexp,
     publicPath: customPublicPath,
-    devServerEnabled,
+    isDev,
   }: {
     resourcePath: string;
     resourceDirname: string;
@@ -25,7 +25,7 @@ export function extractAssets(
     assetsDirname: string;
     pathSeparatorRegexp: RegExp;
     publicPath?: string;
-    devServerEnabled?: boolean;
+    isDev?: boolean;
   },
   logger: {
     debug: (...args: string[]) => void;
@@ -39,7 +39,7 @@ export function extractAssets(
     publicPath = path.join(customPublicPath, publicPath);
   }
 
-  const size = getDefaultAsset(assets).dimensions;
+  const size = getAssetSize(assets);
   const scales = assets.map((asset) => asset.scale);
   const hashes = assets.map((asset) =>
     crypto.createHash('md5').update(asset.data).digest('hex')
@@ -64,11 +64,7 @@ export function extractAssets(
       type: ${JSON.stringify(resourceExtensionType)},
       hash: ${JSON.stringify(hashes.join())},
       httpServerLocation: ${JSON.stringify(publicPath)},
-      ${
-        devServerEnabled
-          ? `fileSystemLocation: ${JSON.stringify(resourceDirname)},`
-          : ''
-      }
+      ${isDev ? `fileSystemLocation: ${JSON.stringify(resourceDirname)},` : ''}
       ${size ? `height: ${size.height},` : ''}
       ${size ? `width: ${size.width},` : ''}
     });

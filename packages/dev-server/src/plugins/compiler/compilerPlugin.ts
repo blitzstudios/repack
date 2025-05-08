@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
-import type { Server } from '../../types';
-import type { SendProgress } from '../../types';
+import type { Server } from '../../types.js';
+import type { SendProgress } from '../../types.js';
 
 async function compilerPlugin(
   instance: FastifyInstance,
@@ -27,8 +27,8 @@ async function compilerPlugin(
 
       if (!filename) {
         // This technically should never happen - this route should not be called if file is missing.
-        request.log.error('File was not provided');
-        return reply.notFound();
+        request.log.debug('File was not provided');
+        return reply.notFound('File was not provided');
       }
 
       // Let consumer infer the platform. If function is not provided fallback
@@ -53,6 +53,7 @@ async function compilerPlugin(
           JSON.stringify({
             done: completed,
             total,
+            status: 'Bundling with Re.Pack',
           })
         );
       };
@@ -115,7 +116,7 @@ async function compilerPlugin(
           }
         }
       } catch (error) {
-        request.log.error(error);
+        request.log.debug(error);
         return reply.notFound((error as Error).message);
       }
     },

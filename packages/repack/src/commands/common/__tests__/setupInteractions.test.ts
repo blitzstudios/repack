@@ -1,7 +1,7 @@
 import type readline from 'node:readline';
 
-import type { Logger } from '../../../types';
-import { setupInteractions } from '../setupInteractions';
+import type { Logger } from '../../../types.js';
+import { setupInteractions } from '../setupInteractions.js';
 
 // eliminate ANSI colors formatting for proper assertions
 jest.mock('colorette', () =>
@@ -239,6 +239,7 @@ describe('setupInteractions', () => {
             onOpenDevTools: debuggerSupport ? jest.fn() : undefined,
             onOpenDevMenu() {},
             onReload() {},
+            onAdbReverse() {},
           },
           {
             logger: mockLogger,
@@ -261,6 +262,10 @@ describe('setupInteractions', () => {
         );
         expect(mockProcess.stdout.write).toHaveBeenNthCalledWith(
           4,
+          ' a: Run adb reverse\n'
+        );
+        expect(mockProcess.stdout.write).toHaveBeenNthCalledWith(
+          5,
           '\nPress Ctrl+c or Ctrl+z to quit the dev server\n\n'
         );
       });

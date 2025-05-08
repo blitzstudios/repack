@@ -1,6 +1,13 @@
 import { ModuleFederationPlugin as MFPluginRspack } from '@module-federation/enhanced/rspack';
 import type { Compiler } from '@rspack/core';
-import { ModuleFederationPluginV2 } from '../ModuleFederationPluginV2';
+import { ModuleFederationPluginV2 } from '../ModuleFederationPluginV2.js';
+
+type CompilerWarning = Error & {
+  moduleDescriptor?: {
+    name: string;
+    identifier: string;
+  };
+};
 
 jest.mock('@module-federation/enhanced/rspack');
 
@@ -8,6 +15,9 @@ const mockCompiler = {
   context: __dirname,
   options: {},
   webpack: {
+    DefinePlugin: jest.fn(() => ({
+      apply: jest.fn(),
+    })),
     rspackVersion: '1.0.0',
   },
 } as unknown as Compiler;
@@ -16,8 +26,9 @@ const mockPlugin = MFPluginRspack as unknown as jest.Mock<
   typeof MFPluginRspack
 >;
 
-const runtimePluginPath = require.resolve(
-  '../../modules/FederationRuntimePlugin'
+const corePluginPath = require.resolve('@callstack/repack/mf/core-plugin');
+const resolverPluginPath = require.resolve(
+  '@callstack/repack/mf/resolver-plugin'
 );
 
 describe('ModuleFederationPlugin', () => {
@@ -136,22 +147,24 @@ describe('ModuleFederationPlugin', () => {
     expect(config.shared['@react-native/'].eager).toBe(false);
   });
 
-  it('should add FederationRuntimePlugin to runtime plugins', () => {
+  it('should add CorePlugin & ResolverPlugin to runtime plugins by default', () => {
     new ModuleFederationPluginV2({ name: 'test' }).apply(mockCompiler);
 
     const config = mockPlugin.mock.calls[0][0];
-    expect(config.runtimePlugins).toContain(runtimePluginPath);
+    expect(config.runtimePlugins).toContain(corePluginPath);
+    expect(config.runtimePlugins).toContain(resolverPluginPath);
   });
 
-  it('should not add FederationRuntimePlugin to runtime plugins when already present', () => {
+  it('should not add duplicate default runtime plugins when already present', () => {
     new ModuleFederationPluginV2({
       name: 'test',
-      runtimePlugins: [runtimePluginPath],
+      runtimePlugins: [corePluginPath, resolverPluginPath],
     }).apply(mockCompiler);
 
     const config = mockPlugin.mock.calls[0][0];
-    expect(config.runtimePlugins).toContain(runtimePluginPath);
-    expect(config.runtimePlugins).toHaveLength(1);
+    expect(config.runtimePlugins).toContain(corePluginPath);
+    expect(config.runtimePlugins).toContain(resolverPluginPath);
+    expect(config.runtimePlugins).toHaveLength(2);
   });
 
   it('should use loaded-first as default shareStrategy', () => {
@@ -169,5 +182,102 @@ describe('ModuleFederationPlugin', () => {
 
     const config = mockPlugin.mock.calls[0][0];
     expect(config.shareStrategy).toEqual('version-first');
+  });
+
+  it('should ignore EnvironmentNotSupportAsyncWarning', () => {
+    const plugin = new ModuleFederationPluginV2({ name: 'test' });
+    plugin.apply(mockCompiler);
+
+    const ignoreWarnings = mockCompiler.options.ignoreWarnings as ((
+      warning: CompilerWarning
+    ) => boolean)[];
+    const warning = new Error() as CompilerWarning;
+    warning.name = 'EnvironmentNotSupportAsyncWarning';
+    warning.message = 'Environment does not support async';
+
+    expect(ignoreWarnings[0](warning)).toBe(true);
+  });
+
+  it('should ignore MF2 runtime dynamic import warnings', () => {
+    const plugin = new ModuleFederationPluginV2({ name: 'test' });
+    plugin.apply(mockCompiler);
+
+    const ignoreWarnings = mockCompiler.options.ignoreWarnings as ((
+      warning: CompilerWarning
+    ) => boolean)[];
+
+    const warning = new Error() as CompilerWarning;
+
+    warning.moduleDescriptor = {
+      name: '@module-federation/runtime/dist/index.cjs.js',
+      identifier: '@module-federation/runtime/dist/index.cjs.js',
+    };
+    warning.message = `
+      ⚠ Critical dependency: the request of a dependency is an expression
+      ╭─[1222:93]
+ 1220 │ } else {
+ 1221 │     Promise.resolve(/* webpackIgnore: true */ /* @vite-ignore */ entry).then(function(p) {
+ 1222 │         return /*#__PURE__*/ _interop_require_wildcard._(require(p));
+      ·                                                                  ──
+ 1223 │     }).then(resolve)["catch"](reject);
+ 1224 │ }
+      ╰────
+    `;
+
+    expect(ignoreWarnings[1](warning)).toBe(true);
+
+    // also works for runtime-core
+    warning.moduleDescriptor = {
+      name: '@module-federation/runtime-core/dist/index.cjs.js',
+      identifier: '@module-federation/runtime-core/dist/index.cjs.js',
+    };
+
+    expect(ignoreWarnings[1](warning)).toBe(true);
+  });
+
+  it('should not cause a crash when warning does not have a moduleDescriptor', () => {
+    const plugin = new ModuleFederationPluginV2({ name: 'test' });
+    plugin.apply(mockCompiler);
+
+    const ignoreWarnings = mockCompiler.options.ignoreWarnings as ((
+      warning: CompilerWarning
+    ) => boolean)[];
+
+    const warning = new Error('some warning') as CompilerWarning;
+
+    expect(() => ignoreWarnings[1](warning)).not.toThrow();
+  });
+
+  it('should throw an error for an invalid container name', () => {
+    const invalidContainerNames = [
+      'app-name',
+      '123AppName',
+      'app@name',
+      'app name',
+    ];
+
+    invalidContainerNames.forEach((name) => {
+      expect(() => {
+        new ModuleFederationPluginV2({ name }).apply(mockCompiler);
+      }).toThrow(
+        `[RepackModuleFederationPlugin] The container's name: '${name}' must be a valid JavaScript identifier. ` +
+          'Please correct it to proceed.'
+      );
+    });
+  });
+
+  it('should not throw an error for a valid container name', () => {
+    const validContainerNames = [
+      'app_name',
+      'appName',
+      'appName123',
+      '$appName',
+    ];
+
+    validContainerNames.forEach((name) => {
+      expect(() => {
+        new ModuleFederationPluginV2({ name }).apply(mockCompiler);
+      }).not.toThrow();
+    });
   });
 });

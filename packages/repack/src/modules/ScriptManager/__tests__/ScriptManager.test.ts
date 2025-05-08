@@ -1,10 +1,10 @@
 import NativeScriptManager, {
   type NormalizedScriptLocator,
-} from '../NativeScriptManager';
-import { Script } from '../Script';
-import { ScriptManager } from '../ScriptManager';
+} from '../NativeScriptManager.js';
+import { Script } from '../Script.js';
+import { ScriptManager } from '../ScriptManager.js';
 
-jest.mock('../NativeScriptManager', () => ({
+jest.mock('../NativeScriptManager.js', () => ({
   loadScript: jest.fn(),
   prefetchScript: jest.fn(),
   invalidateScripts: jest.fn(),
@@ -19,15 +19,17 @@ jest.mock('../NativeScriptManager', () => ({
   },
 }));
 
-globalThis.__webpack_require__ = {
-  u: (id: string) => `${id}.chunk.bundle`,
-  p: () => '',
-  repack: {
-    loadScript: jest.fn(),
-    loadHotUpdate: jest.fn(),
-    shared: { scriptManager: undefined },
-  },
+const webpackRequire = () => [];
+
+webpackRequire.i = [] as any[];
+webpackRequire.l = () => {};
+webpackRequire.u = (id: string) => `${id}.chunk.bundle`;
+webpackRequire.p = () => '';
+webpackRequire.repack = {
+  shared: { scriptManager: undefined },
 };
+
+globalThis.__webpack_require__ = webpackRequire;
 
 class FakeCache {
   data: Record<string, string> = {};
@@ -56,6 +58,13 @@ class ScriptLoaderError extends Error {
 
 beforeEach(() => {
   ScriptManager.init();
+
+  // mock the error handler to disable polluting the console
+  // @ts-expect-error private method
+  ScriptManager.shared.handleError = (error, message, ...args) => {
+    ScriptManager.shared.emit('error', { message, args, originalError: error });
+    throw error;
+  };
 });
 
 afterEach(() => {
@@ -71,14 +80,17 @@ describe('ScriptManagerAPI', () => {
   });
 
   it('throw error if there are no resolvers', async () => {
-    const spy = jest.spyOn(console, 'error').mockImplementationOnce(() => {});
+    const spy = jest.spyOn(
+      ScriptManager.shared,
+      'handleError' as keyof ScriptManager
+    );
 
     await expect(
       ScriptManager.shared.resolveScript('src_App_js', 'main')
-    ).rejects.toThrow(/Error: No script resolvers were added/);
+    ).rejects.toThrow();
 
     expect(spy).toHaveBeenCalled();
-    expect(spy.mock.calls[0][0]).toEqual(
+    expect(spy.mock.calls[0][1]).toEqual(
       expect.stringMatching(
         /^\[ScriptManager\] Failed while resolving script locator/
       )
@@ -86,17 +98,20 @@ describe('ScriptManagerAPI', () => {
   });
 
   it('throw error if no resolvers handled request', async () => {
-    const spy = jest.spyOn(console, 'error').mockImplementationOnce(() => {});
+    const spy = jest.spyOn(
+      ScriptManager.shared,
+      'handleError' as keyof ScriptManager
+    );
 
     ScriptManager.shared.addResolver(async () => undefined);
     ScriptManager.shared.addResolver(async () => undefined);
 
     await expect(
       ScriptManager.shared.resolveScript('src_App_js', 'main')
-    ).rejects.toThrow(/No resolver was able to resolve script src_App_js/);
+    ).rejects.toThrow();
 
     expect(spy).toHaveBeenCalled();
-    expect(spy.mock.calls[0][0]).toEqual(
+    expect(spy.mock.calls[0][1]).toEqual(
       expect.stringMatching(
         /^\[ScriptManager\] Failed while resolving script locator/
       )
@@ -104,7 +119,10 @@ describe('ScriptManagerAPI', () => {
   });
 
   it('remove all resolvers', async () => {
-    const spy = jest.spyOn(console, 'error').mockImplementationOnce(() => {});
+    const spy = jest.spyOn(
+      ScriptManager.shared,
+      'handleError' as keyof ScriptManager
+    );
 
     ScriptManager.shared.addResolver(async () => undefined);
     ScriptManager.shared.addResolver(async () => undefined);
@@ -112,10 +130,10 @@ describe('ScriptManagerAPI', () => {
 
     await expect(
       ScriptManager.shared.resolveScript('src_App_js', 'main')
-    ).rejects.toThrow(/Error: No script resolvers were added/);
+    ).rejects.toThrow();
 
     expect(spy).toHaveBeenCalled();
-    expect(spy.mock.calls[0][0]).toEqual(
+    expect(spy.mock.calls[0][1]).toEqual(
       expect.stringMatching(
         /^\[ScriptManager\] Failed while resolving script locator/
       )
