@@ -43,6 +43,10 @@ export const startCommandOptions = [
     parse: (val: string) => path.resolve(val),
   },
   {
+    name: '--send-events <string>',
+    description: 'Send packager events to a listener',
+  },
+  {
     name: '--log-requests',
     description: 'Enables logging of all requests to the server',
   },

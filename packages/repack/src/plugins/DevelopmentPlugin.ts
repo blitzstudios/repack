@@ -23,6 +23,7 @@ export interface DevelopmentPluginConfig {
    * Target application platform.
    */
   platform?: string;
+  listenerIP?: string;
 }
 
 /**
@@ -113,6 +114,7 @@ export class DevelopmentPlugin implements RspackPluginInstance {
       __PUBLIC_PROTOCOL__: JSON.stringify(protocol),
       __PUBLIC_HOST__: JSON.stringify(host),
       __PUBLIC_PORT__: Number(port),
+      __LISTENER_IP__: JSON.stringify(this.config.listenerIP),
       __REACT_NATIVE_MAJOR_VERSION__: Number(majorVersion),
       __REACT_NATIVE_MINOR_VERSION__: Number(minorVersion),
       __REACT_NATIVE_PATCH_VERSION__: Number(patchVersion),

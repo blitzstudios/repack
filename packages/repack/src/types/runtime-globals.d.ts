@@ -91,6 +91,7 @@ declare var __DEV__: boolean;
 declare var __PUBLIC_PROTOCOL__: string;
 declare var __PUBLIC_HOST__: string;
 declare var __PUBLIC_PORT__: number;
+declare var __LISTENER_IP__: string;
 declare var __PLATFORM__: string;
 declare var __REACT_NATIVE_MAJOR_VERSION__: number;
 declare var __REACT_NATIVE_MINOR_VERSION__: number;

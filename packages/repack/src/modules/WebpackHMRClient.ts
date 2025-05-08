@@ -1,3 +1,4 @@
+import TcpSocket from 'react-native-tcp-socket';
 import type { HMRMessage } from '../types.js';
 import { getDevServerLocation } from './getDevServerLocation.js';
 
@@ -9,6 +10,7 @@ interface LoadingViewModule {
 class HMRClient {
   url: string;
   socket: WebSocket;
+  listener: TcpSocket.Socket | undefined;
   // state
   lastCompilationHash: string | null = null;
 
@@ -50,6 +52,31 @@ class HMRClient {
     };
   }
 
+  sendTcpSocket(message: string) {
+    let tempConnection: TcpSocket.Socket | null = null;
+
+    try {
+      tempConnection = TcpSocket.createConnection(
+        {
+          port: 9093,
+          host: __LISTENER_IP__,
+          reuseAddress: true,
+        },
+        () => {
+          const json = JSON.stringify({ _webpack: message });
+          tempConnection?.write(json);
+          tempConnection?.destroy();
+        }
+      );
+      tempConnection.on('error', () => {
+        tempConnection?.destroy();
+      });
+    } catch (e) {
+      console.log('[HMRClient] Send TCPSocket failed: ', e);
+      tempConnection?.destroy();
+    }
+  }
+
   processMessage(message: HMRMessage) {
     // Only process messages for the target platform
     if (message.body.name !== __PLATFORM__) {
@@ -58,12 +85,14 @@ class HMRClient {
 
     switch (message.action) {
       case 'compiling':
+        this.sendTcpSocket('building');
         this.handleCompilationInProgress();
         break;
       case 'hash':
         this.handleHashUpdate(message.body.hash);
         break;
       case 'ok':
+        this.sendTcpSocket('built');
         this.handleBundleUpdate();
         break;
     }

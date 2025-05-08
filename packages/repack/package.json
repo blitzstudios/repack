@@ -75,7 +75,7 @@
     }
   },
   "dependencies": {
-    "@callstack/repack-dev-server": "workspace:*",
+    "@callstack/repack-dev-server": "blitzstudios/repack.git#callstack-repack-dev-server-v5.0.6-gitpkg",
     "@discoveryjs/json-ext": "^0.5.7",
     "@rspack/plugin-react-refresh": "1.0.0",
     "babel-loader": "^9.2.1",
@@ -91,6 +91,7 @@
     "memfs": "^4.11.1",
     "mime-types": "^2.1.35",
     "pretty-format": "^26.6.2",
+    "react-native-tcp-socket": "^6.0.6",
     "react-refresh": "^0.14.0",
     "schema-utils": "^4.2.0",
     "shallowequal": "^1.1.0",

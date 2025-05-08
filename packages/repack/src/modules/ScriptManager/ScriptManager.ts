@@ -227,10 +227,10 @@ export class ScriptManager extends EventEmitter {
     await this.storage?.setItem(CACHE_KEY, JSON.stringify(this.cache));
   }
 
-  protected handleError(error: any, message: string, ...args: any[]): never {
+  protected handleError(error: any, message: string, ...args: any[]) {
     console.error(message, ...args, { originalError: error });
-    this.emit('error', { message, args, originalError: error });
-    throw error;
+    // this.emit('error', { message, args, originalError: error });
+    // throw error;
   }
 
   /**
@@ -253,7 +253,7 @@ export class ScriptManager extends EventEmitter {
     caller?: string,
     webpackContext = getWebpackContext(),
     referenceUrl?: string
-  ): Promise<Script> {
+  ): Promise<any> {
     await this.initCache();
     try {
       if (!this.resolvers.length) {
@@ -319,6 +319,9 @@ export class ScriptManager extends EventEmitter {
         '[ScriptManager] Failed while resolving script locator:',
         { scriptId, caller }
       );
+      return new Promise((resolve) => {
+        resolve(null);
+      });
     }
   }
 
@@ -367,6 +370,9 @@ export class ScriptManager extends EventEmitter {
         webpackContext,
         referenceUrl
       );
+      if (!script) {
+        return;
+      }
 
       try {
         this.emit('loading', script.toObject());
@@ -450,6 +456,9 @@ export class ScriptManager extends EventEmitter {
     }
     const loadProcess = async () => {
       const script = await this.resolveScript(scriptId, caller, webpackContext);
+      if (!script) {
+        return;
+      }
 
       try {
         this.emit('prefetching', script.toObject());
@@ -485,7 +494,7 @@ export class ScriptManager extends EventEmitter {
    * @param scriptIds Array of script ids to clear from cache and remove from filesystem.
    * @returns Array of script ids that were invalidated.
    */
-  async invalidateScripts(scriptIds: string[] = []) {
+  async invalidateScripts(scriptIds: string[]) {
     try {
       await this.initCache();
 
@@ -496,7 +505,7 @@ export class ScriptManager extends EventEmitter {
       });
 
       await this.saveCache();
-      await this.nativeScriptManager.invalidateScripts(scriptIds);
+      await this.nativeScriptManager.invalidateScripts(ids);
 
       this.emit('invalidated', ids);
       return ids;

@@ -1,4 +1,5 @@
 // @ts-expect-error type-only import
+import path from 'path';
 import type { Server } from '@callstack/repack-dev-server';
 import type { Configuration, StatsCompilation } from 'webpack';
 import packageJson from '../../../package.json';
@@ -37,6 +38,7 @@ export async function start(
   cliConfig: CliConfig,
   args: StartArguments
 ) {
+  const { sendEvents: sendEventsArg } = args;
   const detectedPlatforms = Object.keys(cliConfig.platforms);
 
   if (args.platform && !detectedPlatforms.includes(args.platform)) {
@@ -119,6 +121,7 @@ export async function start(
       }
 
       compiler.on('watchRun', ({ platform }) => {
+        console.log('[CompilerPlugin] hook: watchRun');
         ctx.notifyBuildStart(platform);
         ctx.broadcastToHmrClients<HMRMessage>({
           action: 'compiling',
@@ -133,6 +136,7 @@ export async function start(
       });
 
       compiler.on('invalid', ({ platform }) => {
+        console.log('[CompilerPlugin] hook: invalid');
         ctx.notifyBuildStart(platform);
         ctx.broadcastToHmrClients<HMRMessage>({
           action: 'compiling',
@@ -149,6 +153,7 @@ export async function start(
           platform: string;
           stats: StatsCompilation;
         }) => {
+          console.log('[CompilerPlugin] hook: done');
           ctx.notifyBuildEnd(platform);
           ctx.broadcastToHmrClients<HMRMessage>({
             action: 'hash',
@@ -219,9 +224,17 @@ export async function start(
 
   await start();
 
+  let sendEventsStop = () => {};
+  if (sendEventsArg) {
+    const sendEventsPath = path.join(cliConfig.root, sendEventsArg);
+    const { default: sendEvents } = await import(sendEventsPath);
+    sendEventsStop = await sendEvents(cliConfig.root);
+  }
+
   return {
     stop: async () => {
       reporter.stop();
+      sendEventsStop();
       await stop();
     },
   };

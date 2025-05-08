@@ -41,6 +41,7 @@ export interface RepackPluginConfig {
    * Refer to {@link OutputPluginConfig.extraChunks} for more details.
    */
   extraChunks?: OutputPluginConfig['extraChunks'];
+  listenerIP?: string;
 }
 
 /**
@@ -99,6 +100,7 @@ export class RepackPlugin implements RspackPluginInstance {
 
     new compiler.webpack.DefinePlugin({
       __DEV__: JSON.stringify(compiler.options.mode === 'development'),
+      __E2E__: JSON.stringify(process.env.E2E),
     }).apply(compiler);
 
     new BabelPlugin().apply(compiler);
@@ -117,7 +119,7 @@ export class RepackPlugin implements RspackPluginInstance {
 
     new RepackTargetPlugin().apply(compiler);
 
-    new DevelopmentPlugin({ platform }).apply(compiler);
+    new DevelopmentPlugin({ platform, listenerIP: this.config?.listenerIP }).apply(compiler);
 
     new SourceMapPlugin({ platform }).apply(compiler);
 
