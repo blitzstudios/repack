@@ -1,5 +1,4 @@
 import path from 'path';
-// @ts-expect-error type-only import
 import type { Server } from '@callstack/repack-dev-server';
 import type { Configuration, StatsCompilation } from 'webpack';
 import packageJson from '../../../package.json';
@@ -227,9 +226,9 @@ export async function start(
 
   let sendEventsStop = () => {};
   if (sendEventsArg) {
-    const sendEventsPath = path.join(config.root, sendEventsArg);
+    const sendEventsPath = path.join(cliConfig.root, sendEventsArg);
     const { default: sendEvents } = await import(sendEventsPath);
-    sendEventsStop = await sendEvents(config.root);
+    sendEventsStop = await sendEvents(cliConfig.root);
   }
 
   return {

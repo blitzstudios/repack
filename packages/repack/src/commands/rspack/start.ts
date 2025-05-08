@@ -19,6 +19,7 @@ import logo from '../common/logo.js';
 import { setupEnvironment } from '../common/setupEnvironment.js';
 import type { CliConfig, StartArguments } from '../types.js';
 import { Compiler } from './Compiler.js';
+import { DevServerOptions } from '@callstack/repack-dev-server';
 
 /**
  * Start command that runs a development server.
@@ -52,7 +53,7 @@ export async function start(
   // expose selected args as environment variables
   setupEnvironment(args);
 
-  const devServerOptions = configs[0].devServer ?? {};
+  const devServerOptions = (configs[0].devServer ?? {}) as DevServerOptions;
   const showHttpRequests = args.verbose || args.logRequests;
 
   const reporter = composeReporters(
