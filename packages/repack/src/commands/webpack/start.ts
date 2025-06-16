@@ -75,7 +75,6 @@ export async function start(
     cliConfig.reactNativePath
   );
 
-  // const serverHost = args.host || "0.0.0.0";
   const { createServer } = await import('@callstack/repack-dev-server');
   const { start, stop } = await createServer({
     options: {

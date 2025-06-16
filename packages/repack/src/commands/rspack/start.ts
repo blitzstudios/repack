@@ -1,3 +1,4 @@
+import path from 'path';
 import type { Configuration } from '@rspack/core';
 import packageJson from '../../../package.json';
 import {
@@ -35,6 +36,7 @@ export async function start(
   cliConfig: CliConfig,
   args: StartArguments
 ) {
+  const { sendEvents: sendEventsArg } = args;
   const detectedPlatforms = Object.keys(cliConfig.platforms);
 
   if (args.platform && !detectedPlatforms.includes(args.platform)) {
@@ -168,9 +170,17 @@ export async function start(
   await start();
   compiler.start();
 
+  let sendEventsStop = () => {};
+  if (sendEventsArg) {
+    const sendEventsPath = path.join(cliConfig.root, sendEventsArg);
+    const { default: sendEvents } = await import(sendEventsPath);
+    sendEventsStop = await sendEvents(cliConfig.root);
+  }
+
   return {
     stop: async () => {
       reporter.stop();
+      sendEventsStop();
       await stop();
     },
   };
