@@ -1,5 +1,5 @@
 /** Default development server hostname. */
-export const DEFAULT_HOSTNAME = '0.0.0.0';
+export const DEFAULT_HOSTNAME = 'localhost';
 
 /** Default development server port. */
 export const DEFAULT_PORT = +(process.env.RCT_METRO_PORT as string) || 8081;
