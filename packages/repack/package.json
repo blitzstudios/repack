@@ -1,6 +1,6 @@
 {
   "name": "@callstack/repack",
-  "version": "5.0.6-c",
+  "version": "5.0.6-d",
   "description": "A toolkit to build your React Native application with Rspack or Webpack.",
   "type": "commonjs",
   "main": "./dist/index.js",
@@ -75,7 +75,7 @@
     }
   },
   "dependencies": {
-    "@callstack/repack-dev-server": "blitzstudios/repack.git#callstack-repack-dev-server-v5.0.6-a-gitpkg",
+    "@callstack/repack-dev-server": "blitzstudios/repack.git#callstack-repack-dev-server-v5.0.6-b-gitpkg",
     "@discoveryjs/json-ext": "^0.5.7",
     "@rspack/plugin-react-refresh": "1.0.0",
     "babel-loader": "^9.2.1",
