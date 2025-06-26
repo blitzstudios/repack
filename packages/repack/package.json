@@ -1,6 +1,6 @@
 {
   "name": "@callstack/repack",
-  "version": "5.0.6-d",
+  "version": "5.0.6-e",
   "description": "A toolkit to build your React Native application with Rspack or Webpack.",
   "type": "commonjs",
   "main": "./dist/index.js",
