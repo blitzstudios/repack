@@ -381,6 +381,8 @@ export class WebSocketMessageServer extends WebSocketServer {
         
         // Use the 'open' package to open the URL in Chrome (DevTools URLs need Chrome)
         const open = (await import('open')).default;
+        await open('chrome://inspect', { app: { name: 'google chrome' } });
+        await new Promise(resolve => setTimeout(resolve, 1000));
         await open(devtoolsFrontendUrl, { app: { name: 'google chrome' } });
         this.fastify.log.info({
           msg: 'DevTools opened successfully in browser',

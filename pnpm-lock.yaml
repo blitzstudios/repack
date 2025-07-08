@@ -520,8 +520,8 @@ importers:
   packages/repack:
     dependencies:
       '@callstack/repack-dev-server':
-        specifier: blitzstudios/repack.git#callstack-repack-dev-server-v5.0.6-b-gitpkg
-        version: https://codeload.github.com/blitzstudios/repack/tar.gz/b4e6997eda377f1fa268c72f8eda0d1479327ecb
+        specifier: blitzstudios/repack.git#callstack-repack-dev-server-v5.0.7-c-gitpkg
+        version: https://codeload.github.com/blitzstudios/repack/tar.gz/5718443a5a60c84c2b6be67ce075e9cfe7173dce
       '@discoveryjs/json-ext':
         specifier: ^0.5.7
         version: 0.5.7
@@ -1565,9 +1565,9 @@ packages:
   '@bufbuild/protobuf@2.2.0':
     resolution: {integrity: sha512-+imAQkHf7U/Rwvu0wk1XWgsP3WnpCWmK7B48f0XqSNzgk64+grljTKC7pnO/xBiEMUziF7vKRfbBnOQhg126qQ==}
 
-  '@callstack/repack-dev-server@https://codeload.github.com/blitzstudios/repack/tar.gz/b4e6997eda377f1fa268c72f8eda0d1479327ecb':
-    resolution: {tarball: https://codeload.github.com/blitzstudios/repack/tar.gz/b4e6997eda377f1fa268c72f8eda0d1479327ecb}
-    version: 5.0.6-b
+  '@callstack/repack-dev-server@https://codeload.github.com/blitzstudios/repack/tar.gz/5718443a5a60c84c2b6be67ce075e9cfe7173dce':
+    resolution: {tarball: https://codeload.github.com/blitzstudios/repack/tar.gz/5718443a5a60c84c2b6be67ce075e9cfe7173dce}
+    version: 5.0.7-c
     engines: {node: '>=18'}
 
   '@callstack/rspress-theme@0.0.2':
@@ -9319,7 +9319,7 @@ snapshots:
 
   '@bufbuild/protobuf@2.2.0': {}
 
-  '@callstack/repack-dev-server@https://codeload.github.com/blitzstudios/repack/tar.gz/b4e6997eda377f1fa268c72f8eda0d1479327ecb':
+  '@callstack/repack-dev-server@https://codeload.github.com/blitzstudios/repack/tar.gz/5718443a5a60c84c2b6be67ce075e9cfe7173dce':
     dependencies:
       '@babel/code-frame': 7.27.1
       '@fastify/middie': 8.3.1
