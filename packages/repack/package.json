@@ -1,6 +1,6 @@
 {
   "name": "@callstack/repack",
-  "version": "5.0.7-c",
+  "version": "5.0.9",
   "description": "A toolkit to build your React Native application with Rspack or Webpack.",
   "type": "commonjs",
   "main": "./dist/index.js",
@@ -91,7 +91,7 @@
     "memfs": "^4.11.1",
     "mime-types": "^2.1.35",
     "pretty-format": "^26.6.2",
-    "react-native-tcp-socket": "^6.0.6",
+    "react-native-tcp-socket": "6.0.6",
     "react-refresh": "^0.14.0",
     "schema-utils": "^4.2.0",
     "shallowequal": "^1.1.0",

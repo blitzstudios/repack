@@ -79,6 +79,7 @@ export async function start(
   const { start, stop } = await createServer({
     options: {
       ...devServerOptions,
+      host: '0.0.0.0',
       rootDir: cliConfig.root,
       logRequests: showHttpRequests,
     },
