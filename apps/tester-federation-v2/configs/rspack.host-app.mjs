@@ -11,7 +11,7 @@ export default (env) => {
     context,
     entry: './src/host/index.js',
     resolve: {
-      ...Repack.getResolveOptions(),
+      ...Repack.getResolveOptions({ enablePackageExports: true }),
     },
     output: {
       path: '[context]/build/host-app/[platform]',
@@ -49,7 +49,7 @@ export default (env) => {
           'react-native': {
             singleton: true,
             eager: true,
-            requiredVersion: '0.78.0',
+            requiredVersion: '0.79.1',
           },
           '@react-navigation/native': {
             singleton: true,
@@ -64,18 +64,23 @@ export default (env) => {
           'react-native-safe-area-context': {
             singleton: true,
             eager: true,
-            requiredVersion: '5.3.0',
+            requiredVersion: '^5.4.0',
           },
           'react-native-screens': {
             singleton: true,
             eager: true,
-            requiredVersion: '4.9.2',
+            requiredVersion: '^4.10.0',
           },
         },
       }),
       // silence missing @react-native-masked-view optionally required by @react-navigation/elements
       new rspack.IgnorePlugin({
         resourceRegExp: /^@react-native-masked-view/,
+      }),
+      new rspack.DefinePlugin({
+        __WITH_PRELOAD__:
+          process.env.WITH_PRELOAD === 'true' ||
+          process.env.WITH_PRELOAD === '1',
       }),
     ],
   };

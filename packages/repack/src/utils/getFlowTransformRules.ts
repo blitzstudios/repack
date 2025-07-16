@@ -20,6 +20,8 @@ const FLOW_TYPED_MODULES = [
   'react-native-inappbrowser-reborn',
   'react-native-camera',
   'react-native-view-shot',
+  '@react-native-community/push-notification-ios',
+  'react-native-keyboard-aware-scroll-view',
 ];
 
 /**
@@ -50,6 +52,12 @@ interface GetFlowTransformRulesOptions {
    * rather than only removing the type.
    */
   ignoreUninitializedFields?: boolean;
+
+  /**
+   * Whether to remove empty import statements which were
+   * only used for importing flow types.
+   */
+  removeEmptyImports?: boolean;
 }
 
 /**
@@ -61,6 +69,7 @@ interface GetFlowTransformRulesOptions {
  * @param options.exclude Array of module names to exclude from Flow transformation (defaults to empty array)
  * @param options.all If true, bypasses looking for @flow pragma comment before parsing (defaults to true)
  * @param options.ignoreUninitializedFields If true, removes uninitialized class fields completely rather than only removing the type (defaults to false)
+ * @param options.removeEmptyImports If true, removes empty import statements which were only used for importing flow types (defaults to true)
  *
  * @returns Array of rules for transforming Flow typed modules
  */
@@ -69,6 +78,7 @@ export function getFlowTransformRules({
   exclude = [],
   all = true,
   ignoreUninitializedFields = false,
+  removeEmptyImports = true,
 }: GetFlowTransformRulesOptions = {}) {
   return [
     {
@@ -78,7 +88,7 @@ export function getFlowTransformRules({
       exclude: getModulePaths(exclude),
       use: {
         loader: '@callstack/repack/flow-loader',
-        options: { all, ignoreUninitializedFields },
+        options: { all, ignoreUninitializedFields, removeEmptyImports },
       },
     },
   ];

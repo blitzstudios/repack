@@ -362,40 +362,45 @@ export class WebSocketMessageServer extends WebSocketServer {
     try {
       // Get the dev server URL
       const serverAddress = this.fastify.server.address();
-      const port = typeof serverAddress === 'object' ? serverAddress?.port : 8081;
+      const port =
+        typeof serverAddress === 'object' ? serverAddress?.port : 8081;
       const devServerUrl = `http://localhost:${port}`;
-      
+
       // Make request to get DevTools URL from React Native dev middleware
       const response = await fetch(`${devServerUrl}/json/list`);
       const data = await response.json();
-      
+
       // Find the first item with devtoolsFrontendUrl
-      const devtoolsFrontendUrl = data.find((item: any) => item.devtoolsFrontendUrl)?.devtoolsFrontendUrl;
-      
+      const devtoolsFrontendUrl = data.find(
+        (item: any) => item.devtoolsFrontendUrl
+      )?.devtoolsFrontendUrl;
+
       if (devtoolsFrontendUrl) {
         this.fastify.log.info({
           msg: 'Opening DevTools URL',
           url: devtoolsFrontendUrl,
           clientId,
         });
-        
+
         // Use the 'open' package to open the URL in Chrome (DevTools URLs need Chrome)
         const open = (await import('open')).default;
         await open('chrome://inspect', { app: { name: 'google chrome' } });
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         await open(devtoolsFrontendUrl, { app: { name: 'google chrome' } });
         this.fastify.log.info({
           msg: 'DevTools opened successfully in browser',
           clientId,
         });
-      
+
         // Send success response to client
         const socket = this.getClientSocket(clientId);
-        socket.send(JSON.stringify({
-          version: WebSocketMessageServer.PROTOCOL_VERSION,
-          result: { success: true, url: devtoolsFrontendUrl },
-          id: { requestId: 'openDevTools', clientId },
-        }));
+        socket.send(
+          JSON.stringify({
+            version: WebSocketMessageServer.PROTOCOL_VERSION,
+            result: { success: true, url: devtoolsFrontendUrl },
+            id: { requestId: 'openDevTools', clientId },
+          })
+        );
       } else {
         this.fastify.log.warn({
           msg: 'No DevTools URL found',
@@ -410,14 +415,16 @@ export class WebSocketMessageServer extends WebSocketServer {
         error: (error as Error).message,
         clientId,
       });
-      
+
       // Send error response to client
       const socket = this.getClientSocket(clientId);
-      socket.send(JSON.stringify({
-        version: WebSocketMessageServer.PROTOCOL_VERSION,
-        error: (error as Error).message,
-        id: { requestId: 'openDevTools', clientId },
-      }));
+      socket.send(
+        JSON.stringify({
+          version: WebSocketMessageServer.PROTOCOL_VERSION,
+          error: (error as Error).message,
+          id: { requestId: 'openDevTools', clientId },
+        })
+      );
     }
   }
 

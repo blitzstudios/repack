@@ -1,4 +1,5 @@
 import path from 'path';
+import type { DevServerOptions } from '@callstack/repack-dev-server';
 import type { Configuration } from '@rspack/core';
 import packageJson from '../../../package.json';
 import {
@@ -13,6 +14,7 @@ import { makeCompilerConfig } from '../common/config/makeCompilerConfig.js';
 import {
   getMimeType,
   parseFileUrl,
+  resetPersistentCache,
   setupInteractions,
 } from '../common/index.js';
 import { runAdbReverse } from '../common/index.js';
@@ -20,7 +22,6 @@ import logo from '../common/logo.js';
 import { setupEnvironment } from '../common/setupEnvironment.js';
 import type { CliConfig, StartArguments } from '../types.js';
 import { Compiler } from './Compiler.js';
-import { DevServerOptions } from '@callstack/repack-dev-server';
 
 /**
  * Start command that runs a development server.
@@ -66,6 +67,23 @@ export async function start(
   );
 
   process.stdout.write(logo(packageJson.version, 'Rspack'));
+
+  if (args.resetCache) {
+    resetPersistentCache({
+      bundler: 'rspack',
+      rootDir: cliConfig.root,
+      cacheConfigs: configs.map((config) => config.experiments?.cache),
+    });
+  }
+
+  if (process.env.RSPACK_PROFILE) {
+    const { applyProfile } = await import('./profile.js');
+    await applyProfile(
+      process.env.RSPACK_PROFILE,
+      process.env.RSPACK_TRACE_LAYER,
+      process.env.RSPACK_TRACE_OUTPUT
+    );
+  }
 
   const compiler = new Compiler(configs, reporter, cliConfig.root);
 
