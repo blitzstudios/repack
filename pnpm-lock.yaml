@@ -381,8 +381,8 @@ importers:
         specifier: ^5.5.0
         version: 5.6.0
       '@react-native/dev-middleware':
-        specifier: 0.76.5
-        version: 0.76.5
+        specifier: 0.77.3
+        version: 0.77.3
       fastify:
         specifier: ^4.24.3
         version: 4.28.1
@@ -534,8 +534,8 @@ importers:
   packages/repack:
     dependencies:
       '@callstack/repack-dev-server':
-        specifier: blitzstudios/repack.git#callstack-repack-dev-server-v5.1.0-gitpkg
-        version: https://codeload.github.com/blitzstudios/repack/tar.gz/9945fb05b8636edede97caebea6ce6db1d9bd431
+        specifier: blitzstudios/repack.git#callstack-repack-dev-server-v5.1.1-gitpkg
+        version: https://codeload.github.com/blitzstudios/repack/tar.gz/6363a5784c4afda9f8e91480ad4a74427d495934
       '@discoveryjs/json-ext':
         specifier: ^0.5.7
         version: 0.5.7
@@ -1597,9 +1597,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@callstack/repack-dev-server@https://codeload.github.com/blitzstudios/repack/tar.gz/9945fb05b8636edede97caebea6ce6db1d9bd431':
-    resolution: {tarball: https://codeload.github.com/blitzstudios/repack/tar.gz/9945fb05b8636edede97caebea6ce6db1d9bd431}
-    version: 5.1.0
+  '@callstack/repack-dev-server@https://codeload.github.com/blitzstudios/repack/tar.gz/6363a5784c4afda9f8e91480ad4a74427d495934':
+    resolution: {tarball: https://codeload.github.com/blitzstudios/repack/tar.gz/6363a5784c4afda9f8e91480ad4a74427d495934}
+    version: 5.1.1
     engines: {node: '>=18'}
 
   '@callstack/rspress-theme@0.0.3':
@@ -2543,16 +2543,16 @@ packages:
       '@react-native-community/cli':
         optional: true
 
-  '@react-native/debugger-frontend@0.76.5':
-    resolution: {integrity: sha512-5gtsLfBaSoa9WP8ToDb/8NnDBLZjv4sybQQj7rDKytKOdsXm3Pr2y4D7x7GQQtP1ZQRqzU0X0OZrhRz9xNnOqA==}
+  '@react-native/debugger-frontend@0.77.3':
+    resolution: {integrity: sha512-FTERmc43r/3IpTvUZTr9gVVTgOIrg1hrkN57POr/CiL8RbcY/nv6vfNM7/CXG5WF8ckHiLeWTcRHzJUl1+rFkw==}
     engines: {node: '>=18'}
 
   '@react-native/debugger-frontend@0.79.1':
     resolution: {integrity: sha512-IgbQM/djzBhkkjzIT/b36zwkc4UMxZLTKgRVJrSEjuwtOPmgfh/1F5m3OUitbMd4/e06VgN0vPLyBzToj1kiwA==}
     engines: {node: '>=18'}
 
-  '@react-native/dev-middleware@0.76.5':
-    resolution: {integrity: sha512-f8eimsxpkvMgJia7POKoUu9uqjGF6KgkxX4zqr/a6eoR1qdEAWUd6PonSAqtag3PAqvEaJpB99gLH2ZJI1nDGg==}
+  '@react-native/dev-middleware@0.77.3':
+    resolution: {integrity: sha512-tCylGMjibJAEl2r2nWX5L5CvK6XFLGbjhe7Su7OcxRGrynHin87rAmcaTeoTtbtsREFlFM0f4qxcmwCxmbZHJw==}
     engines: {node: '>=18'}
 
   '@react-native/dev-middleware@0.79.1':
@@ -9270,12 +9270,12 @@ snapshots:
   '@biomejs/cli-win32-x64@1.9.4':
     optional: true
 
-  '@callstack/repack-dev-server@https://codeload.github.com/blitzstudios/repack/tar.gz/9945fb05b8636edede97caebea6ce6db1d9bd431':
+  '@callstack/repack-dev-server@https://codeload.github.com/blitzstudios/repack/tar.gz/6363a5784c4afda9f8e91480ad4a74427d495934':
     dependencies:
       '@babel/code-frame': 7.27.1
       '@fastify/middie': 8.3.1
       '@fastify/sensible': 5.6.0
-      '@react-native/dev-middleware': 0.76.5
+      '@react-native/dev-middleware': 0.77.3
       fastify: 4.28.1
       fastify-favicon: 4.3.0
       fastify-plugin: 4.5.1
@@ -10662,18 +10662,19 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@react-native/debugger-frontend@0.76.5': {}
+  '@react-native/debugger-frontend@0.77.3': {}
 
   '@react-native/debugger-frontend@0.79.1': {}
 
-  '@react-native/dev-middleware@0.76.5':
+  '@react-native/dev-middleware@0.77.3':
     dependencies:
       '@isaacs/ttlcache': 1.4.1
-      '@react-native/debugger-frontend': 0.76.5
+      '@react-native/debugger-frontend': 0.77.3
       chrome-launcher: 0.15.2
       chromium-edge-launcher: 0.2.0
       connect: 3.7.0
       debug: 2.6.9
+      invariant: 2.2.4
       nullthrows: 1.1.1
       open: 7.4.2
       selfsigned: 2.4.1
