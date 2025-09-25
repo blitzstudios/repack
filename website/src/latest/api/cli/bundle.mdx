@@ -6,7 +6,7 @@
 
 In the root of an existing project, run this command in your terminal of choice:
 
-import { PackageManagerTabs } from 'rspress/theme';
+import { PackageManagerTabs } from '@theme';
 
 <PackageManagerTabs command={{
   npm: 'npm run react-native bundle',
@@ -119,6 +119,12 @@ Enables verbose logging.
 - Default: `false`
 
 Watch for file changes.
+
+### `--max-workers`
+
+- Type: `number`
+
+(Rspack only) The maximum number of workers to use for transformation parallelization. By default, the number of workers is derived from available CPU cores.
 
 ### `--config`
 

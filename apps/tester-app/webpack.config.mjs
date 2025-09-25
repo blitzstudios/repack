@@ -6,7 +6,7 @@ import TerserPlugin from 'terser-webpack-plugin';
 
 const dirname = Repack.getDirname(import.meta.url);
 
-export default (env) => {
+export default Repack.defineWebpackConfig((env) => {
   const {
     mode = 'development',
     context = dirname,
@@ -51,7 +51,7 @@ export default (env) => {
       rules: [
         {
           test: /\.[cm]?[jt]sx?$/,
-          use: 'babel-loader',
+          use: ['thread-loader', '@callstack/repack/babel-swc-loader'],
           type: 'javascript/auto',
         },
         {
@@ -130,11 +130,6 @@ export default (env) => {
       }),
       new ReanimatedPlugin(),
       new NativeWindPlugin(),
-      // new Repack.plugins.HermesBytecodePlugin({
-      //   enabled: mode === 'production',
-      //   test: /\.(js)?bundle$/,
-      //   exclude: /index.bundle$/,
-      // }),
     ],
   };
-};
+});

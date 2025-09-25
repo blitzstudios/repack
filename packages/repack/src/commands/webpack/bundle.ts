@@ -1,5 +1,5 @@
 import webpack, { type Configuration } from 'webpack';
-import { CLIError } from '../common/cliError.js';
+import { CLIError } from '../../helpers/index.js';
 import { makeCompilerConfig } from '../common/config/makeCompilerConfig.js';
 import {
   normalizeStatsOptions,
@@ -30,6 +30,9 @@ export async function bundle(
     reactNativePath: cliConfig.reactNativePath,
   });
 
+  // remove devServer configuration to avoid schema validation errors
+  delete config.devServer;
+
   // expose selected args as environment variables
   setupEnvironment(args);
 
@@ -59,7 +62,7 @@ export async function bundle(
 
     if (args.json && stats !== undefined) {
       const statsOptions = normalizeStatsOptions(
-        compiler.options.stats,
+        compiler?.options.stats,
         args.stats
       );
 
@@ -67,7 +70,7 @@ export async function bundle(
       try {
         await writeStats(statsJson, {
           filepath: args.json,
-          rootDir: compiler.context,
+          rootDir: compiler?.context ?? '',
         });
       } catch (e) {
         throw new CLIError(String(e));
@@ -79,12 +82,12 @@ export async function bundle(
 
   return new Promise<void>((resolve) => {
     if (args.watch) {
-      compiler.hooks.watchClose.tap('bundle', resolve);
-      compiler.watch(config.watchOptions ?? {}, errorHandler);
+      compiler?.hooks.watchClose.tap('bundle', resolve);
+      compiler?.watch(config.watchOptions ?? {}, errorHandler);
     } else {
-      compiler.run((error, stats) => {
+      compiler?.run((error, stats) => {
         // make cache work: https://webpack.js.org/api/node/#run
-        compiler.close(async (closeErr) => {
+        compiler?.close(async (closeErr) => {
           if (closeErr) console.error(closeErr);
           await errorHandler(error, stats);
           resolve();

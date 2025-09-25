@@ -1,5 +1,7 @@
-import type { ServerOptions as HttpsServerOptions } from 'node:https';
-import type { FastifyBaseLogger } from 'fastify';
+import type * as Http from 'node:http';
+import type * as Https from 'node:https';
+import type * as DevMiddleware from '@react-native/dev-middleware';
+import type { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import type { Options as ProxyOptions } from 'http-proxy-middleware';
 import type { CompilerDelegate } from './plugins/compiler/types.js';
 import type {
@@ -11,6 +13,31 @@ import type {
   SymbolicatorResults,
 } from './plugins/symbolicate/types.js';
 import type { NormalizedOptions } from './utils/normalizeOptions.js';
+
+type MiddlewareHandler<
+  RequestInternal extends Http.IncomingMessage = Http.IncomingMessage,
+  ResponseInternal extends Http.ServerResponse = Http.ServerResponse,
+> = (
+  req: RequestInternal,
+  res: ResponseInternal,
+  next: (err?: any) => void
+) => void | Promise<void>;
+
+type MiddlewareObject<
+  RequestInternal extends Http.IncomingMessage = Http.IncomingMessage,
+  ResponseInternal extends Http.ServerResponse = Http.ServerResponse,
+> = {
+  name?: string;
+  path?: string;
+  middleware: MiddlewareHandler<RequestInternal, ResponseInternal>;
+};
+
+export type Middleware<
+  RequestInternal extends Http.IncomingMessage = Http.IncomingMessage,
+  ResponseInternal extends Http.ServerResponse = Http.ServerResponse,
+> =
+  | MiddlewareObject<RequestInternal, ResponseInternal>
+  | MiddlewareHandler<RequestInternal, ResponseInternal>;
 
 export type { CompilerDelegate };
 export type {
@@ -26,6 +53,11 @@ interface ProxyConfig extends ProxyOptions {
   path?: ProxyOptions['pathFilter'];
   context?: ProxyOptions['pathFilter'];
 }
+
+export type SetupMiddlewaresFunction = (
+  middlewares: Middleware[],
+  devServer: FastifyInstance
+) => Middleware[];
 
 export interface DevServerOptions {
   /**
@@ -48,7 +80,10 @@ export interface DevServerOptions {
     | 'http'
     | 'https'
     | { type: 'http' }
-    | { type: 'https'; options?: HttpsServerOptions };
+    | { type: 'https'; options?: Https.ServerOptions };
+
+  /** Function to customize middleware setup. Receives built-in middlewares and Fastify instance. */
+  setupMiddlewares?: SetupMiddlewaresFunction;
 }
 
 export namespace Server {
@@ -68,6 +103,9 @@ export namespace Server {
 
     /** Whether to enable logging requests. */
     logRequests?: boolean;
+
+    /** `@react-native/dev-middleware` module. */
+    devMiddleware: typeof DevMiddleware;
   }
 
   /**
@@ -76,6 +114,9 @@ export namespace Server {
   export interface Delegate {
     /** A compiler delegate. */
     compiler: CompilerDelegate;
+
+    /** A DevTools delegate. */
+    devTools?: DevToolsDelegate;
 
     /** A symbolicator delegate. */
     symbolicator: SymbolicatorDelegate;
@@ -137,6 +178,19 @@ export namespace Server {
      * @param log An object with log data.
      */
     onMessage: (log: any) => void;
+  }
+
+  /**
+   * Delegate with implementation for dev tools functions.
+   */
+  export interface DevToolsDelegate {
+    /**
+     * Resolve the project filepath with [projectRoot] prefix.
+     *
+     * @param filepath The filepath to resolve.
+     * @returns The resolved project path.
+     */
+    resolveProjectPath: (filepath: string) => string;
   }
 
   /**

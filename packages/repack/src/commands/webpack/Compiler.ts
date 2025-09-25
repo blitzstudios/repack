@@ -5,8 +5,8 @@ import { Worker } from 'node:worker_threads';
 import type { SendProgress } from '@callstack/repack-dev-server';
 import type webpack from 'webpack';
 import { WORKER_ENV_KEY } from '../../env.js';
+import { CLIError } from '../../helpers/index.js';
 import type { LogType, Reporter } from '../../logging/types.js';
-import { CLIError } from '../common/cliError.js';
 import { DEV_SERVER_ASSET_TYPES } from '../consts.js';
 import type { StartArguments } from '../types.js';
 import type {
@@ -100,33 +100,31 @@ export class Compiler extends EventEmitter {
           ),
         };
         this.emit(value.event, { platform, stats: value.stats });
+        // Emit final progress with timing for this platform
+        this.reporter.process({
+          issuer: 'DevServer',
+          timestamp: Date.now(),
+          type: 'progress',
+          message: [{ progress: { platform, time: value.stats.time } }],
+        });
         callPendingResolvers();
       } else if (value.event === 'error') {
         this.emit(value.event, value.error);
       } else if (value.event === 'progress') {
         this.progressSenders[platform].forEach((sendProgress) => {
-          if (Number.isNaN(value.total)) return;
-          if (Number.isNaN(value.completed)) return;
-          sendProgress({
-            total: value.total,
-            completed: value.completed,
+          const percentage = Math.floor(value.percentage * 100);
+          sendProgress({ completed: percentage, total: 100 });
+        });
+        // skip reporting progress for the final last 1%
+        // rely on the done event from the `compiler.done` hook
+        if (value.percentage < 0.99) {
+          this.reporter.process({
+            issuer: 'DevServer',
+            message: [{ progress: { platform, value: value.percentage } }],
+            timestamp: Date.now(),
+            type: 'progress',
           });
-        });
-        this.reporter.process({
-          issuer: 'DevServer',
-          message: [
-            {
-              progress: {
-                value: value.percentage,
-                label: value.label,
-                message: value.message,
-                platform,
-              },
-            },
-          ],
-          timestamp: Date.now(),
-          type: 'progress',
-        });
+        }
       } else {
         this.isCompilationInProgress[platform] = true;
         this.emit(value.event, { platform });

@@ -1,4 +1,3 @@
-// @ts-check
 import path from 'node:path';
 import * as Repack from '@callstack/repack';
 import { NativeWindPlugin } from '@callstack/repack-plugin-nativewind';
@@ -7,8 +6,7 @@ import { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin';
 
 const dirname = Repack.getDirname(import.meta.url);
 
-/** @type {(env: import('@callstack/repack').EnvOptions) => import('@rspack/core').Configuration} */
-export default (env) => {
+export default Repack.defineRspackConfig((env) => {
   const {
     mode = 'development',
     context = dirname,
@@ -30,9 +28,15 @@ export default (env) => {
     },
     module: {
       rules: [
-        ...Repack.getJsTransformRules({
-          swc: { importSource: 'nativewind' },
-        }),
+        {
+          test: /\.[cm]?[jt]sx?$/,
+          use: {
+            loader: '@callstack/repack/babel-swc-loader',
+            parallel: true,
+            options: {},
+          },
+          type: 'javascript/auto',
+        },
         {
           test: Repack.getAssetExtensionsRegExp(
             Repack.ASSET_EXTENSIONS.filter((ext) => ext !== 'svg')
@@ -116,14 +120,12 @@ export default (env) => {
           },
         ],
       }),
-      // new Repack.plugins.HermesBytecodePlugin({
-      //   enabled: mode === 'production',
-      //   test: /\.(js)?bundle$/,
-      //   exclude: /index.bundle$/,
-      // }),
-      process.env.RSDOCTOR && new RsdoctorRspackPlugin(),
-      new ReanimatedPlugin(),
+      new ReanimatedPlugin({
+        babelPluginOptions: { relativeSourceLocation: true },
+        unstable_disableTransform: true,
+      }),
       new NativeWindPlugin({ cssInteropOptions: { inlineRem: 16 } }),
+      process.env.RSDOCTOR && new RsdoctorRspackPlugin(),
     ].filter(Boolean),
   };
-};
+});

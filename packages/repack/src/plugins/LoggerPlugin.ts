@@ -1,5 +1,7 @@
-import type { Compiler, RspackPluginInstance } from '@rspack/core';
+import type { Compiler as RspackCompiler } from '@rspack/core';
+import type { Compiler as WebpackCompiler } from 'webpack';
 import { VERBOSE_ENV_KEY, WORKER_ENV_KEY } from '../env.js';
+import { isTruthyEnv } from '../helpers/index.js';
 import {
   ConsoleReporter,
   FileReporter,
@@ -32,7 +34,7 @@ export interface LoggerPluginConfig {
  *
  * @category Webpack Plugin
  */
-export class LoggerPlugin implements RspackPluginInstance {
+export class LoggerPlugin {
   private static SUPPORTED_TYPES: string[] = [
     'debug',
     'info',
@@ -51,10 +53,6 @@ export class LoggerPlugin implements RspackPluginInstance {
    */
   constructor(private config: LoggerPluginConfig) {
     this.config.output = this.config.output ?? { console: true };
-
-    const isTruthyEnv = (env: string | undefined) => {
-      return !!env && env !== 'false' && env !== '0';
-    };
 
     const reporters = [];
     if (this.config.output.console) {
@@ -121,12 +119,12 @@ export class LoggerPlugin implements RspackPluginInstance {
     }
   }
 
-  /**
-   * Apply the plugin.
-   *
-   * @param compiler Webpack compiler instance.
-   */
-  apply(compiler: Compiler) {
+  apply(compiler: RspackCompiler): void;
+  apply(compiler: WebpackCompiler): void;
+
+  apply(__compiler: unknown) {
+    const compiler = __compiler as RspackCompiler;
+
     // Make sure webpack-cli doesn't print stats by default.
     if (compiler.options.stats === undefined) {
       compiler.options.stats = 'none';
@@ -154,40 +152,32 @@ export class LoggerPlugin implements RspackPluginInstance {
       });
     });
 
-    compiler.hooks.done.tap('RepackLoggerPlugin', (stats) => {
+    compiler.hooks.afterDone.tap('RepackLoggerPlugin', (stats) => {
       if (compiler.options.devServer) {
-        const { time, errors, warnings } = stats.toJson({
+        const { errors, warnings } = stats.toJson({
           all: false,
-          timings: true,
           errors: true,
           warnings: true,
         });
 
-        let entires: Array<LogEntry | undefined> = [];
-        if (errors?.length) {
-          entires = [
-            this.createEntry('LoggerPlugin', 'error', [
-              'Failed to build bundle due to errors',
-            ]),
-            ...errors.map((error) =>
+        const entires: Array<LogEntry | undefined> = errors?.length
+          ? [
               this.createEntry('LoggerPlugin', 'error', [
-                `Error in "${error.moduleName}":\n${error.message}`,
-              ])
-            ),
-          ];
-        } else {
-          entires = [
-            this.createEntry('LoggerPlugin', 'info', [
-              warnings?.length ? 'Bundle built with warnings' : 'Bundle built',
-              { time },
-            ]),
-            ...(warnings?.map((warning) =>
-              this.createEntry('LoggerPlugin', 'warn', [
-                `Warning in "${warning.moduleName}":\n${warning.message}`,
-              ])
-            ) ?? []),
-          ];
-        }
+                'Failed to build bundle due to errors',
+              ]),
+              ...errors.map((error) =>
+                this.createEntry('LoggerPlugin', 'error', [
+                  `Error in "${error.moduleName}":\n${error.message}`,
+                ])
+              ),
+            ]
+          : [
+              ...(warnings?.map((warning) =>
+                this.createEntry('LoggerPlugin', 'warn', [
+                  `Warning in "${warning.moduleName}":\n${warning.message}`,
+                ])
+              ) ?? []),
+            ];
 
         for (const entry of entires.filter(Boolean) as LogEntry[]) {
           this.processEntry(entry);

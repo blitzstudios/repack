@@ -1,14 +1,13 @@
 import path from 'node:path';
 import type { DevServerOptions } from '@callstack/repack-dev-server';
 import type {
-  Compiler,
   EntryNormalized,
   Plugins,
-  RspackPluginInstance,
+  Compiler as RspackCompiler,
 } from '@rspack/core';
 import ReactRefreshPlugin from '@rspack/plugin-react-refresh';
-import { isRspackCompiler } from './utils/isRspackCompiler.js';
-import { moveElementBefore } from './utils/moveElementBefore.js';
+import type { Compiler as WebpackCompiler } from 'webpack';
+import { isRspackCompiler, moveElementBefore } from '../helpers/index.js';
 
 const [reactRefreshEntryPath, reactRefreshPath, refreshUtilsPath] =
   ReactRefreshPlugin.deprecated_runtimePaths;
@@ -31,7 +30,7 @@ export interface DevelopmentPluginConfig {
  *
  * @category Webpack Plugin
  */
-export class DevelopmentPlugin implements RspackPluginInstance {
+export class DevelopmentPlugin {
   /**
    * Constructs new `DevelopmentPlugin`.
    *
@@ -89,12 +88,12 @@ export class DevelopmentPlugin implements RspackPluginInstance {
     return 'http';
   }
 
-  /**
-   * Apply the plugin.
-   *
-   * @param compiler Webpack compiler instance.
-   */
-  apply(compiler: Compiler) {
+  apply(compiler: RspackCompiler): void;
+  apply(compiler: WebpackCompiler): void;
+
+  apply(__compiler: unknown) {
+    const compiler = __compiler as RspackCompiler;
+
     if (!compiler.options.devServer) {
       return;
     }
@@ -105,9 +104,8 @@ export class DevelopmentPlugin implements RspackPluginInstance {
 
     const host = compiler.options.devServer.host;
     const port = compiler.options.devServer.port;
-    const protocol = this.getProtocolType(
-      compiler.options.devServer as DevServerOptions
-    );
+    // @ts-expect-error: devServertypes here are not being overridden properly
+    const protocol = this.getProtocolType(compiler.options.devServer);
     const platform = this.config.platform ?? (compiler.options.name as string);
 
     new compiler.webpack.DefinePlugin({

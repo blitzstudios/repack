@@ -6,7 +6,7 @@
 
 In the root of an existing React Native project with Re.Pack, run this command in your terminal of choice:
 
-import { PackageManagerTabs } from 'rspress/theme';
+import { PackageManagerTabs } from '@theme';
 
 <PackageManagerTabs command={{
   npm: "npm run react-native start",
@@ -97,6 +97,12 @@ Resets the transformation cache.
 - Type: `boolean`
 
 Enables verbose logging.
+
+### `--max-workers`
+
+- Type: `number`
+
+(Rspack only) The maximum number of workers to use for transformation parallelization. By default, the number of workers is derived from available CPU cores.
 
 ### `--config`
 

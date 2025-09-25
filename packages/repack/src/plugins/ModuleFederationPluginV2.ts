@@ -1,7 +1,8 @@
 import type { moduleFederationPlugin as MF } from '@module-federation/sdk';
-import type { Compiler, RspackPluginInstance } from '@rspack/core';
+import type { Compiler as RspackCompiler } from '@rspack/core';
 import { name as isIdentifier } from 'estree-util-is-identifier-name';
-import { isRspackCompiler } from './utils/isRspackCompiler.js';
+import type { Compiler as WebpackCompiler } from 'webpack';
+import { isRspackCompiler } from '../helpers/index.js';
 
 type JsModuleDescriptor = {
   identifier: string;
@@ -96,7 +97,7 @@ export interface ModuleFederationPluginV2Config
  *
  * @category Webpack Plugin
  */
-export class ModuleFederationPluginV2 implements RspackPluginInstance {
+export class ModuleFederationPluginV2 {
   public config: MF.ModuleFederationPluginOptions;
   private deepImports: boolean;
   private defaultRuntimePlugins: string[];
@@ -163,7 +164,7 @@ export class ModuleFederationPluginV2 implements RspackPluginInstance {
     return plugins;
   }
 
-  private getModuleFederationPlugin(compiler: Compiler) {
+  private getModuleFederationPlugin(compiler: RspackCompiler) {
     if (isRspackCompiler(compiler)) {
       return require('@module-federation/enhanced/rspack')
         .ModuleFederationPlugin;
@@ -198,11 +199,21 @@ export class ModuleFederationPluginV2 implements RspackPluginInstance {
    * @internal
    */
   private adaptSharedDependencies(shared: MF.Shared): MF.Shared {
-    const sharedDependencyConfig = (eager?: boolean) => ({
-      singleton: true,
-      eager: eager ?? true,
-      requiredVersion: '*',
-    });
+    const sharedDependencyConfig = (
+      eager: boolean | undefined,
+      importValue: string | false | undefined
+    ): MF.SharedConfig => {
+      const config: MF.SharedConfig = {
+        singleton: true,
+        eager: eager ?? true,
+        requiredVersion: '*',
+      };
+      // set import to false if it's explicitly set to false
+      if (importValue === false) {
+        config.import = false;
+      }
+      return config;
+    };
 
     const findSharedDependency = (
       name: string,
@@ -221,6 +232,10 @@ export class ModuleFederationPluginV2 implements RspackPluginInstance {
       typeof sharedReactNative === 'object'
         ? sharedReactNative.eager
         : undefined;
+    const reactNativeImport =
+      typeof sharedReactNative === 'object'
+        ? sharedReactNative.import
+        : undefined;
 
     if (!this.deepImports || !sharedReactNative) {
       return shared;
@@ -230,12 +245,18 @@ export class ModuleFederationPluginV2 implements RspackPluginInstance {
       const adjustedSharedDependencies = [...shared];
       if (!findSharedDependency('react-native/', shared)) {
         adjustedSharedDependencies.push({
-          'react-native/': sharedDependencyConfig(reactNativeEager),
+          'react-native/': sharedDependencyConfig(
+            reactNativeEager,
+            reactNativeImport
+          ),
         });
       }
       if (!findSharedDependency('@react-native/', shared)) {
         adjustedSharedDependencies.push({
-          '@react-native/': sharedDependencyConfig(reactNativeEager),
+          '@react-native/': sharedDependencyConfig(
+            reactNativeEager,
+            reactNativeImport
+          ),
         });
       }
       return adjustedSharedDependencies;
@@ -243,18 +264,24 @@ export class ModuleFederationPluginV2 implements RspackPluginInstance {
     const adjustedSharedDependencies = { ...shared };
     if (!findSharedDependency('react-native/', shared)) {
       Object.assign(adjustedSharedDependencies, {
-        'react-native/': sharedDependencyConfig(reactNativeEager),
+        'react-native/': sharedDependencyConfig(
+          reactNativeEager,
+          reactNativeImport
+        ),
       });
     }
     if (!findSharedDependency('@react-native/', shared)) {
       Object.assign(adjustedSharedDependencies, {
-        '@react-native/': sharedDependencyConfig(reactNativeEager),
+        '@react-native/': sharedDependencyConfig(
+          reactNativeEager,
+          reactNativeImport
+        ),
       });
     }
     return adjustedSharedDependencies;
   }
 
-  private setupIgnoredWarnings(compiler: Compiler) {
+  private setupIgnoredWarnings(compiler: RspackCompiler) {
     // MF2 produces warning about not supporting async await
     // we can silence this warning since it works just fine
     compiler.options.ignoreWarnings = compiler.options.ignoreWarnings ?? [];
@@ -287,7 +314,12 @@ export class ModuleFederationPluginV2 implements RspackPluginInstance {
     });
   }
 
-  apply(compiler: Compiler) {
+  apply(compiler: RspackCompiler): void;
+  apply(compiler: WebpackCompiler): void;
+
+  apply(__compiler: unknown) {
+    const compiler = __compiler as RspackCompiler;
+
     this.validateModuleFederationContainerName(this.config.name);
     this.ensureModuleFederationPackageInstalled(compiler.context);
     this.setupIgnoredWarnings(compiler);

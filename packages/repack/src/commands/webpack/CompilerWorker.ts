@@ -2,12 +2,13 @@ import path from 'node:path';
 import { parentPort, workerData } from 'node:worker_threads';
 import memfs from 'memfs';
 import webpack, { type Configuration } from 'webpack';
+import { adaptFilenameToPlatform } from '../../helpers/index.js';
 import { makeCompilerConfig } from '../common/config/makeCompilerConfig.js';
-import { adaptFilenameToPlatform } from '../common/index.js';
 import type {
-  CompilerAsset,
   WebpackWorkerOptions,
   WorkerMessages,
+  CompilerAsset,
+  WorkerAsset,
 } from './types.js';
 
 function postMessage(message: WorkerMessages.WorkerMessage): void {
@@ -25,21 +26,8 @@ async function main(opts: WebpackWorkerOptions) {
   });
 
   config.plugins = (config.plugins ?? []).concat(
-    new webpack.ProgressPlugin({
-      entries: false,
-      dependencies: false,
-      modules: true,
-      handler: (percentage, message, text) => {
-        const [, completed, total] = /(\d+)\/(\d+) modules/.exec(text) ?? [];
-        postMessage({
-          event: 'progress',
-          completed: Number.parseInt(completed, 10),
-          total: Number.parseInt(total, 10),
-          percentage: percentage,
-          label: message,
-          message: text,
-        });
-      },
+    new webpack.ProgressPlugin((percentage) => {
+      postMessage({ event: 'progress', percentage: percentage });
     })
   );
 
@@ -50,15 +38,15 @@ async function main(opts: WebpackWorkerOptions) {
   // @ts-expect-error memfs is compatible enough
   compiler.outputFileSystem = fileSystem;
 
-  compiler.hooks.watchRun.tap('webpackWorker', () => {
+  compiler?.hooks.watchRun.tap('webpackWorker', () => {
     postMessage({ event: 'watchRun' });
   });
 
-  compiler.hooks.invalid.tap('webpackWorker', () => {
+  compiler?.hooks.invalid.tap('webpackWorker', () => {
     postMessage({ event: 'invalid' });
   });
 
-  compiler.hooks.done.tap('webpackWorker', (stats) => {
+  compiler?.hooks.done.tap('webpackWorker', (stats) => {
     const compilerStats = stats.toJson({
       all: false,
       assets: true,
@@ -110,12 +98,14 @@ async function main(opts: WebpackWorkerOptions) {
 
     postMessage({
       event: 'done',
-      assets: compilerAssets,
+      assets: {
+        ...compilerAssets,
+      } as Record<string, WorkerAsset>,
       stats: compilerStats,
     });
   });
 
-  compiler.watch(config.watchOptions ?? {}, (error) => {
+  compiler?.watch(config.watchOptions ?? {}, (error) => {
     if (error) {
       postMessage({ event: 'error', error });
     }

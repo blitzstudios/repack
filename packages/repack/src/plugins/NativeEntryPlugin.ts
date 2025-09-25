@@ -1,11 +1,7 @@
 import path from 'node:path';
-import type {
-  Compiler,
-  ResolveAlias,
-  RspackPluginInstance,
-} from '@rspack/core';
-import { isRspackCompiler } from './utils/isRspackCompiler.js';
-import { moveElementBefore } from './utils/moveElementBefore.js';
+import type { ResolveAlias, Compiler as RspackCompiler } from '@rspack/core';
+import type { Compiler as WebpackCompiler } from 'webpack';
+import { isRspackCompiler, moveElementBefore } from '../helpers/index.js';
 
 export interface NativeEntryPluginConfig {
   /**
@@ -15,7 +11,7 @@ export interface NativeEntryPluginConfig {
   initializeCoreLocation?: string;
 }
 
-export class NativeEntryPlugin implements RspackPluginInstance {
+export class NativeEntryPlugin {
   constructor(private config: NativeEntryPluginConfig) {}
 
   private getReactNativePath(
@@ -38,7 +34,12 @@ export class NativeEntryPlugin implements RspackPluginInstance {
       : reactNativePath;
   }
 
-  apply(compiler: Compiler) {
+  apply(compiler: RspackCompiler): void;
+  apply(compiler: WebpackCompiler): void;
+
+  apply(__compiler: unknown) {
+    const compiler = __compiler as RspackCompiler;
+
     const reactNativePath = this.getReactNativePath(
       compiler.options.resolve.alias
         ? compiler.options.resolve.alias?.['react-native']

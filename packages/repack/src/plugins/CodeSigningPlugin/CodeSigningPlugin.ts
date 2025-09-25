@@ -2,11 +2,12 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import util from 'node:util';
-import type { Compiler, RspackPluginInstance } from '@rspack/core';
+import type { Compiler as RspackCompiler } from '@rspack/core';
 import jwt from 'jsonwebtoken';
+import type { Compiler as WebpackCompiler } from 'webpack';
 import { type CodeSigningPluginConfig, validateConfig } from './config.js';
 
-export class CodeSigningPlugin implements RspackPluginInstance {
+export class CodeSigningPlugin {
   private chunkFilenames: Set<string>;
 
   /**
@@ -38,12 +39,12 @@ export class CodeSigningPlugin implements RspackPluginInstance {
     });
   }
 
-  /**
-   * Apply the plugin.
-   *
-   * @param compiler Webpack compiler instance.
-   */
-  apply(compiler: Compiler) {
+  apply(compiler: RspackCompiler): void;
+  apply(compiler: WebpackCompiler): void;
+
+  apply(__compiler: unknown) {
+    const compiler = __compiler as RspackCompiler;
+
     const logger = compiler.getInfrastructureLogger('RepackCodeSigningPlugin');
 
     if (this.config.enabled === false) {
@@ -83,7 +84,12 @@ export class CodeSigningPlugin implements RspackPluginInstance {
 
     compiler.hooks.assetEmitted.tapPromise(
       { name: 'RepackCodeSigningPlugin', stage: 20 },
-      async (file, { outputPath, content, compilation }) => {
+      async (file, { outputPath, compilation }) => {
+        const outputFilepath = path.join(outputPath, file);
+        const readFileAsync = util.promisify(
+          compiler.outputFileSystem!.readFile
+        );
+        const content = (await readFileAsync(outputFilepath)) as Buffer;
         const mainBundleName = compilation.outputOptions.filename as string;
         if (!this.shouldSignFile(file, mainBundleName, excludedChunks)) {
           return;
@@ -102,7 +108,7 @@ export class CodeSigningPlugin implements RspackPluginInstance {
         const writeFileAsync = util.promisify(
           compiler.outputFileSystem!.writeFile
         );
-        await writeFileAsync(path.join(outputPath, file), signedBundle);
+        await writeFileAsync(outputFilepath, signedBundle);
         logger.debug(`Signed ${file}`);
       }
     );
