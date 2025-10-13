@@ -572,8 +572,8 @@ importers:
   packages/repack:
     dependencies:
       '@callstack/repack-dev-server':
-        specifier: blitzstudios/repack.git#callstack-repack-dev-server-v5.2.1-a-gitpkg
-        version: https://codeload.github.com/blitzstudios/repack/tar.gz/7b2cb50216848940be772ce6aa40e16b02e63e1a
+        specifier: blitzstudios/repack.git#callstack-repack-dev-server-v5.2.3-gitpkg
+        version: https://codeload.github.com/blitzstudios/repack/tar.gz/0422e7c3474e7305c23e7685a2dc7c59690f82ff
       '@discoveryjs/json-ext':
         specifier: ^0.5.7
         version: 0.5.7
@@ -1635,9 +1635,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@callstack/repack-dev-server@https://codeload.github.com/blitzstudios/repack/tar.gz/7b2cb50216848940be772ce6aa40e16b02e63e1a':
-    resolution: {tarball: https://codeload.github.com/blitzstudios/repack/tar.gz/7b2cb50216848940be772ce6aa40e16b02e63e1a}
-    version: 5.2.1-a
+  '@callstack/repack-dev-server@https://codeload.github.com/blitzstudios/repack/tar.gz/0422e7c3474e7305c23e7685a2dc7c59690f82ff':
+    resolution: {tarball: https://codeload.github.com/blitzstudios/repack/tar.gz/0422e7c3474e7305c23e7685a2dc7c59690f82ff}
+    version: 5.2.3
     engines: {node: '>=18'}
 
   '@callstack/rspress-preset@0.4.2':
@@ -9113,7 +9113,7 @@ snapshots:
   '@biomejs/cli-win32-x64@1.9.4':
     optional: true
 
-  '@callstack/repack-dev-server@https://codeload.github.com/blitzstudios/repack/tar.gz/7b2cb50216848940be772ce6aa40e16b02e63e1a':
+  '@callstack/repack-dev-server@https://codeload.github.com/blitzstudios/repack/tar.gz/0422e7c3474e7305c23e7685a2dc7c59690f82ff':
     dependencies:
       '@babel/code-frame': 7.27.1
       '@fastify/middie': 8.3.1

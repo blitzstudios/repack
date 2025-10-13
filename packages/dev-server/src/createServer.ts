@@ -104,10 +104,11 @@ export async function createServer(config: Server.Config) {
       return {
         handleDeviceMessage: () => {},
         handleDebuggerMessage: (msg: { method?: string }) => {
-          if (msg.method === 'Network.loadNetworkResource') {
-            connection.device.sendMessage(msg);
-            return true;
-          }
+          // TODO(Luke): This breaks debugging on physical android devices.
+          // if (msg.method === 'Network.loadNetworkResource') {
+          //   connection.device.sendMessage(msg);
+          //   return true;
+          // }
         },
       };
     },
