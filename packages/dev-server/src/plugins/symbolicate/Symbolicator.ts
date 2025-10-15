@@ -32,15 +32,21 @@ export class Symbolicator {
         continue;
       }
 
-      const { searchParams, pathname } = new URL(frame.file, 'file://');
-      const platform = searchParams.get('platform');
-      if (platform) {
-        return platform;
-      }
-      const [bundleFilename] = pathname.split('/').reverse();
-      const [, platformOrExtension, extension] = bundleFilename.split('.');
-      if (extension) {
-        return platformOrExtension;
+      // Some frames may contain non-URL strings (e.g., "native") which cause URL parsing to throw.
+      // Guard against that and skip such frames.
+      try {
+        const { searchParams, pathname } = new URL(frame.file, 'file://');
+        const platform = searchParams.get('platform');
+        if (platform) {
+          return platform;
+        }
+        const [bundleFilename] = pathname.split('/').reverse();
+        const [, platformOrExtension, extension] = bundleFilename.split('.');
+        if (extension) {
+          return platformOrExtension;
+        }
+      } catch (_err) {
+        continue;
       }
     }
   }
@@ -101,8 +107,20 @@ export class Symbolicator {
             fileUrl: frame.file,
             sourceMapLength: rawSourceMap.length,
           });
-          const sourceMapConsumer = await new SourceMapConsumer(
-            rawSourceMap.toString()
+          // Sanitize sourcemap to avoid invalid URL issues (e.g., app://, webpack://, blob://)
+          const mapString = rawSourceMap.toString();
+          const parsed = JSON.parse(mapString);
+          if (typeof parsed.sourceRoot === 'string') {
+            delete parsed.sourceRoot;
+          }
+          if (Array.isArray(parsed.sources)) {
+            parsed.sources = parsed.sources.map((s: unknown) => {
+              if (typeof s !== 'string') return s;
+              return s.replace(/^(app|webpack|blob):\/+/, '/');
+            });
+          }
+          const sourceMapConsumer: SourceMapConsumer = await new SourceMapConsumer(
+            JSON.stringify(parsed)
           );
 
           logger.debug({
