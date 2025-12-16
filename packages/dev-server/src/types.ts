@@ -84,6 +84,11 @@ export interface DevServerOptions {
 
   /** Function to customize middleware setup. Receives built-in middlewares and Fastify instance. */
   setupMiddlewares?: SetupMiddlewaresFunction;
+
+  /**
+   * Extra options passed through to `@react-native/dev-middleware.createDevMiddleware`.
+   */
+  reactNativeDevMiddlewareOptions?: Record<string, any>;
 }
 
 export namespace Server {

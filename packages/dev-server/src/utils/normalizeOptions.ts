@@ -54,6 +54,7 @@ export interface NormalizedOptions {
   url: string;
   disableRequestLogging: boolean;
   devMiddleware: typeof DevMiddleware;
+  reactNativeDevMiddlewareOptions: Record<string, any> | undefined;
   rootDir: string;
   setupMiddlewares: SetupMiddlewaresFunction;
 }
@@ -80,6 +81,8 @@ export function normalizeOptions(options: Server.Options): NormalizedOptions {
     url,
     // dev middleware
     devMiddleware: options.devMiddleware,
+    reactNativeDevMiddlewareOptions:
+      (options as any).reactNativeDevMiddlewareOptions ?? undefined,
     // fastify options
     disableRequestLogging: !options.logRequests,
     // project options
